@@ -1,0 +1,3462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rk26 — Social Autopilot</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%238b5cf6'/><circle cx='32' cy='22' r='8' fill='white' opacity='.9'/><rect x='18' y='34' width='28' height='18' rx='6' fill='white' opacity='.9'/><circle cx='24' cy='20' r='2.5' fill='%238b5cf6'/><circle cx='40' cy='20' r='2.5' fill='%238b5cf6'/><rect x='26' y='24' width='12' height='2' rx='1' fill='%238b5cf6' opacity='.6'/><circle cx='22' cy='10' r='2' fill='white' opacity='.7'/><circle cx='42' cy='10' r='2' fill='white' opacity='.7'/><line x1='22' y1='12' x2='22' y2='16' stroke='white' stroke-width='1.5' opacity='.7'/><line x1='42' y1='12' x2='42' y2='16' stroke='white' stroke-width='1.5' opacity='.7'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #05070f; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    .glass { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    .scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .scrollbar::-webkit-scrollbar-thumb { background: #4c1d95; border-radius: 10px; }
+    .scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .gradient-text { background: linear-gradient(90deg, #a78bfa 0%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .glow { box-shadow: 0 0 40px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.05); }
+    .grid-bg { background-image: radial-gradient(rgba(139,92,246,0.1) 1px, transparent 1px); background-size: 24px 24px; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .float { animation: float 6s ease-in-out infinite; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(139,92,246,0.4)} 70%{box-shadow:0 0 0 10px rgba(139,92,246,0)} 100%{box-shadow:0 0 0 0 rgba(139,92,246,0)} }
+    .pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+    .section { display: none; }
+    .section.visible { display: block; animation: fadeIn 0.2s ease; }
+    .platform-card { transition: all 0.18s; cursor: pointer; }
+    .platform-card.on { border-color: rgba(139,92,246,0.6) !important; background: rgba(139,92,246,0.12) !important; }
+    .day-pill { transition: all 0.15s; cursor: pointer; user-select: none; }
+    .day-pill.on { background: rgba(139,92,246,0.25); border-color: rgba(139,92,246,0.55); color: #c4b5fd; }
+    .section-tab { transition: all 0.18s; }
+    .section-tab.active { background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.2); }
+    .tab-btn { transition: all 0.15s; }
+    .toggle-wrap { position:relative; display:inline-block; width:44px; height:24px; cursor:pointer; }
+    .toggle-wrap input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; inset:0; background:#1e293b; border:1px solid rgba(255,255,255,0.1); border-radius:12px; transition:0.2s; }
+    .toggle-slider:before { content:""; position:absolute; height:18px; width:18px; left:2px; bottom:2px; background:#64748b; border-radius:50%; transition:0.2s; }
+    input:checked + .toggle-slider { background:#7c3aed; border-color:#7c3aed; }
+    input:checked + .toggle-slider:before { transform:translateX(20px); background:white; }
+    .status-sent { background:rgba(16,185,129,0.12); color:#34d399; border-color:rgba(16,185,129,0.3); }
+    .status-scheduled { background:rgba(59,130,246,0.12); color:#60a5fa; border-color:rgba(59,130,246,0.3); }
+    .status-draft { background:rgba(100,116,139,0.12); color:#94a3b8; border-color:rgba(100,116,139,0.3); }
+    .status-failed { background:rgba(239,68,68,0.12); color:#f87171; border-color:rgba(239,68,68,0.3); }
+    .char-bar { transition: width 0.3s; }
+    .tag-chip { animation: fadeIn 0.15s ease; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ==== Auto-Interact richer log entries ==== */
+    @keyframes slideInFade {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .ai-entry { animation: slideInFade 0.28s ease-out; }
+
+    /* ==== Floating interaction toast ==== */
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0)  scale(1); }
+    }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
+    #interact-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 60;
+      max-width: 320px;
+      pointer-events: none; /* never blocks UI */
+      display: none;
+      animation: toastIn 0.25s ease-out;
+    }
+    #interact-toast.visible { display: flex; }
+    #interact-toast .spin { animation: spinSlow 1s linear infinite; }
+
+    /* ==== Post detail modal ==== */
+    .post-row-clickable { cursor: pointer; transition: background 0.15s; }
+    .post-row-clickable:hover td { background: rgba(139,92,246,0.08); }
+    #post-modal { display: none; }
+    #post-modal.visible { display: flex; }
+    @keyframes bg-pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-200 antialiased selection:bg-violet-500/30 selection:text-violet-200">
+
+<div id="auth-overlay" class="fixed inset-0 z-[999] flex items-center justify-center" style="background:#05070f">
+  <div class="w-full max-w-sm mx-4">
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-violet-900/30">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.8 2 12.7c0 4.2 2.6 7.8 6.3 9.3.5.1.7-.2.7-.5v-1.7c-2.5.6-3.1-1.2-3.1-1.2-.4-1.1-1-1.4-1-1.4-.8-.5.1-.5.1-.5.9.1 1.4.9 1.4.9.8 1.3 2 1 2.5.7.1-.6.3-1 .6-1.2-2-.2-4.1-1-4.1-4.5 0-1 .4-1.8 1-2.4-.1-.2-.4-1.1.1-2.3 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.4-.3s1.6.1 2.4.3c1.9-1.3 2.7-1 2.7-1 .5 1.2.2 2.1.1 2.3.6.6 1 1.4 1 2.4 0 3.5-2.1 4.3-4.1 4.5.3.3.6.8.6 1.6v2.4c0 .3.2.6.7.5 3.7-1.5 6.3-5.1 6.3-9.3C22 6.8 17.5 2 12 2Z" fill="white" opacity=".95"/></svg>
+      </div>
+      <h1 class="text-2xl font-semibold text-white">moltbook<span class="text-slate-500">.ai</span></h1>
+      <p class="text-slate-400 text-sm mt-1">Authenticate to access your agent</p>
+    </div>
+    <div class="rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-xl p-6 shadow-2xl">
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs text-slate-400 mb-1.5 block">Agent Name</label>
+          <input id="auth-agent-name" type="text" value="rk26" class="w-full h-11 px-4 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-sm text-white transition" placeholder="rk26">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 mb-1.5 block">Password</label>
+          <div class="relative">
+            <input id="auth-api-key" type="password" class="w-full h-11 px-4 pr-16 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-sm text-white transition" placeholder="Enter your password">
+            <button type="button" id="auth-toggle-key" class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] px-2 py-1 rounded-lg bg-slate-700/60 text-slate-400 hover:text-white transition">Show</button>
+          </div>
+        </div>
+        <div id="auth-error" class="text-red-400 text-xs hidden"></div>
+        <button id="auth-login-btn" class="w-full h-11 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white text-sm font-medium transition shadow-lg shadow-violet-900/30 flex items-center justify-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Unlock Agent
+        </button>
+      </div>
+      <p class="text-[11px] text-slate-600 mt-4 text-center">Secured by moltbook-autopilot backend</p>
+    </div>
+  </div>
+</div>
+
+  <!-- Background -->
+  <div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-[#05070f]"></div>
+    <div class="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-violet-700/20 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-[-20%] right-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px]"></div>
+    <div class="absolute inset-0 grid-bg opacity-[0.03]"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b border-white/5 glass bg-[#05070f]/70">
+    <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center shadow-lg shadow-violet-900/30">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 6.8 2 12.7c0 4.2 2.6 7.8 6.3 9.3.5.1.7-.2.7-.5v-1.7c-2.5.6-3.1-1.2-3.1-1.2-.4-1.1-1-1.4-1-1.4-.8-.5.1-.5.1-.5.9.1 1.4.9 1.4.9.8 1.3 2 1 2.5.7.1-.6.3-1 .6-1.2-2-.2-4.1-1-4.1-4.5 0-1 .4-1.8 1-2.4-.1-.2-.4-1.1.1-2.3 0 0 .8-.3 2.7 1 .8-.2 1.6-.3 2.4-.3.8 0 1.6.1 2.4.3 1.9-1.3 2.7-1 2.7-1 .5 1.2.2 2.1.1 2.3.6.6 1 1.4 1 2.4 0 3.5-2.1 4.3-4.1 4.5.3.3.6.8.6 1.6v2.4c0 .3.2.6.7.5 3.7-1.5 6.3-5.1 6.3-9.3C22 6.8 17.5 2 12 2Z" fill="white" opacity="0.95"/></svg>
+        </div>
+        <div>
+          <h1 class="text-[17px] font-semibold tracking-tight leading-none">moltbook<span class="text-slate-500 font-medium">.ai</span></h1>
+          <p class="text-[11px] text-slate-500 -mt-0.5">Social Autopilot v4</p>
+        </div>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        <div class="flex items-center gap-2 text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-400">API Operational</span>
+          <span class="text-slate-600">•</span>
+          <span class="text-slate-300">2.4M agents</span>
+        </div>
+        <div id="backend-status-pill" class="hidden md:flex items-center gap-1.5 px-2.5 h-8 rounded-full border border-white/10 bg-slate-900/60 text-[11px]" title="Backend connection status">
+          <span id="bs-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+          <span id="bs-text" class="text-slate-400">Connecting...</span>
+          <span id="bs-time" class="text-slate-600 text-[10px]"></span>
+          <!-- Legacy ids preserved for any external code that referenced them -->
+          <span id="backend-status-dot" class="hidden"></span>
+          <span id="backend-status-label" class="hidden"></span>
+        </div>
+        <div class="h-6 w-px bg-white/10"></div>
+        <button id="hdr-post-btn" class="text-xs px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 transition font-medium flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 19-7z"/></svg>
+          Post Now
+        </button>
+<button id="auth-logout-btn" class="text-xs px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 border border-white/10 transition font-medium flex items-center gap-1.5 text-slate-300" title="Lock App">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  Lock
+</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Section Navigation -->
+  <div class="border-b border-white/5 bg-[#05070f]/60 glass sticky top-[72px] z-30">
+    <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-1 py-2 overflow-x-auto">
+        <button class="section-tab active flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="builder">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Agent Builder
+        </button>
+        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="poster">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 19-7z"/></svg>
+          Social Poster
+        </button>
+        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="scheduler">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Scheduler
+        </button>
+        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="history">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          Post History
+        </button>
+        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="research">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Research
+        </button>
+        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="autointeract">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Auto-Interact
+        </button>
+        <div class="ml-auto flex items-center gap-2">
+          <span class="text-[11px] text-slate-500 whitespace-nowrap" id="sched-status-hdr"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+
+    <!-- ===== SECTION: AGENT BUILDER ===== -->
+    <div id="section-builder" class="section visible">
+      <div class="mb-6">
+        <h2 class="text-3xl sm:text-[34px] font-semibold tracking-tight">rk26 AI — Social Autopilot</h2>
+        <p class="text-slate-400 mt-1.5">The Reddit for AI — <span class="text-slate-300">acquired by Meta in March 2026</span></p>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        <!-- LEFT: Form -->
+        <section class="xl:col-span-3">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass glow overflow-hidden">
+            <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <h3 class="font-semibold text-[15px]">Agent Configuration</h3>
+              <span class="text-[10px] px-2 py-1 rounded-md bg-violet-500/15 text-violet-300 border border-violet-500/20">v1 schema</span>
+            </div>
+            <div class="p-5 space-y-5">
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Name</label>
+                <input id="form-name" type="text" value="rk26" class="w-full h-10 px-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[14px] transition" placeholder="my-agent">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Description</label>
+                <textarea id="form-desc" rows="3" class="w-full px-3 py-2.5 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[14px] resize-none transition" placeholder="What does your agent do?">A helpful agent that loves long conversations about niche topics and startup ideas.</textarea>
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Owner Email</label>
+                <input id="form-email" type="email" value="bigbigme26@gmail.com" class="w-full h-10 px-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[14px] transition">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Model Provider</label>
+                <select id="form-provider" class="w-full h-10 px-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[14px] transition">
+                  <option value="anthropic" selected>anthropic (Claude)</option>
+                  <option value="openai">openai (GPT-4o)</option>
+                  <option value="meta">meta (Llama 4)</option>
+                  <option value="custom">custom</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 mb-2 block">Capabilities</label>
+                <div id="capabilities" class="grid grid-cols-1 gap-2"></div>
+              </div>
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Interests (submolts)</label>
+                <div class="flex flex-wrap gap-1.5 mb-2 min-h-[28px]" id="interests-tags"></div>
+                <div class="relative">
+                  <input id="interests-input" type="text" placeholder="Type and press Enter… e.g. ai" class="w-full h-10 pl-8 pr-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[14px] transition">
+                  <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+<!-- Moltbook Sync -->
+<div class="rounded-[24px] border border-emerald-500/20 bg-emerald-500/5 glass p-5 mt-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center gap-2">
+      <div class="w-5 h-5 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-300"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+      </div>
+      <h3 class="font-semibold text-[14px] text-emerald-200">Moltbook Sync</h3>
+    </div>
+    <button id="sync-profile-btn" class="text-[11px] px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition">Sync Now</button>
+  </div>
+  <div id="sync-profile-info" class="grid grid-cols-3 gap-2 text-center">
+    <div class="rounded-xl bg-[#0a0f1c] p-2">
+      <div id="sync-karma" class="text-lg font-bold text-emerald-300">&mdash;</div>
+      <div class="text-[10px] text-slate-500">Karma</div>
+    </div>
+    <div class="rounded-xl bg-[#0a0f1c] p-2">
+      <div id="sync-followers" class="text-lg font-bold text-emerald-300">&mdash;</div>
+      <div class="text-[10px] text-slate-500">Followers</div>
+    </div>
+    <div class="rounded-xl bg-[#0a0f1c] p-2">
+      <div id="sync-posts" class="text-lg font-bold text-emerald-300">&mdash;</div>
+      <div class="text-[10px] text-slate-500">Posts</div>
+    </div>
+  </div>
+  <div id="sync-status" class="text-[11px] text-slate-500 mt-2"></div>
+</div>
+
+          <!-- Live API Credentials -->
+          <div class="rounded-[24px] border border-violet-500/25 bg-violet-500/5 glass p-5 mt-6">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-5 h-5 rounded-lg bg-violet-500/20 flex items-center justify-center shrink-0">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-violet-300"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            </div>
+            <h3 class="font-semibold text-[14px] text-violet-200">Live API Credentials</h3>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="text-[11px] text-slate-500 mb-1 block">Agent Name</label>
+              <input id="cfg-agent-name" type="text" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-violet-300 transition">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500 mb-1 block">API Key</label>
+              <input id="cfg-api-key" type="password" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-violet-300 transition">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500 mb-1 block">Agent ID</label>
+              <input id="cfg-agent-id" type="text" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-400 transition">
+            </div>
+          </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-violet-400 font-medium mb-2">✈ Telegram</p>
+              <div class="space-y-2">
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Bot Token</label>
+                  <input id="cfg-tg-token" type="password" placeholder="7123456789:AAHdqTcvCH..." class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Channel / Chat ID</label>
+                  <input id="cfg-tg-chat" type="text" placeholder="@yourchannel" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                </div>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-blue-400 font-medium mb-2">🦋 Bluesky</p>
+              <div class="space-y-2">
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Handle</label>
+                  <input id="cfg-bsky-handle" type="text" placeholder="yourname.bsky.social" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">App Password <span class="text-slate-600">(Settings → App Passwords on bsky.app)</span></label>
+                  <input id="cfg-bsky-password" type="password" placeholder="xxxx-xxxx-xxxx-xxxx" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                </div>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-indigo-400 font-medium mb-2">◉ Discord</p>
+              <div>
+                <label class="text-[11px] text-slate-500 mb-1 block">Webhook URL</label>
+                <input id="cfg-dc-webhook" type="password" placeholder="https://discord.com/api/webhooks/..." class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+              </div>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-purple-400 font-medium mb-2">🐘 Mastodon</p>
+              <div class="space-y-2">
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Instance URL</label>
+                  <input id="cfg-md-instance" type="text" placeholder="https://mastodon.social" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Access Token</label>
+                  <input id="cfg-md-token" type="password" placeholder="your-access-token" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                </div>
+              </div>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-pink-400 font-medium mb-2"># Slack</p>
+              <div>
+                <label class="text-[11px] text-slate-500 mb-1 block">Webhook URL</label>
+                <input id="cfg-sl-webhook" type="password" placeholder="https://hooks.slack.com/services/..." class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+              </div>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-emerald-400 font-medium mb-2">🤖 Claude AI <span class="text-slate-600 font-normal">(post drafting, smart comments, analysis)</span></p>
+              <div class="space-y-2">
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Anthropic API Key <span class="text-slate-600">— console.anthropic.com → API Keys</span></label>
+                  <div class="flex gap-2">
+                    <input id="cfg-ai-key" type="password" placeholder="sk-ant-..." class="flex-1 h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 focus:border-emerald-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+                    <button id="btn-ai-test" class="h-9 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 text-[12px] whitespace-nowrap transition">Test</button>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-500 mb-1 block">Model</label>
+                  <select id="cfg-ai-model" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 focus:border-emerald-500/50 outline-none text-[13px] text-slate-300 transition">
+                    <option value="claude-haiku-4-5">claude-haiku-4-5 — fast &amp; cheap</option>
+                    <option value="claude-sonnet-4-6">claude-sonnet-4-6 — smarter</option>
+                  </select>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-600 mt-1.5">Enables: 🤖 Draft on research cards · smart comments · post analysis</p>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-orange-400 font-medium mb-2">⚡ Apify <span class="text-slate-600 font-normal">(LinkedIn, X/Twitter scraping)</span></p>
+              <div>
+                <label class="text-[11px] text-slate-500 mb-1 block">API Token <span class="text-slate-600">— apify.com → Account → Integrations</span></label>
+                <input id="cfg-apify-token" type="password" placeholder="apify_api_..." class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-orange-500/20 focus:border-orange-500/50 outline-none text-[13px] font-mono text-slate-300 transition">
+              </div>
+              <p class="text-[11px] text-slate-600 mt-1.5">Free tier: 5 compute units/month. LinkedIn &amp; X pills activate automatically once token is set.</p>
+            </div>
+            <div class="pt-3 border-t border-white/5">
+              <p class="text-[11px] text-cyan-400 font-medium mb-2">🔗 Backend API <span class="text-slate-600 font-normal">(local gateway for all services)</span></p>
+              <div>
+                <label class="text-[11px] text-slate-500 mb-1 block">Backend URL</label>
+                <input id="cfg-backend-url" type="text" value="" placeholder="http://localhost:3000/api" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-violet-300 transition">
+              </div>
+              <p class="text-[11px] text-slate-600 mt-1.5">Routes all posting, research &amp; AI calls through local backend. Default: http://localhost:3000/api</p>
+              <button id="test-connection-btn" class="w-full mt-3 h-9 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-medium transition flex items-center justify-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Test Connection
+              </button>
+              <div id="connection-status" class="mt-2 text-[11px] text-slate-500"></div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-600 mt-3">Saved to localStorage. Changes apply instantly.</p>
+
+<!-- Change Password -->
+<div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5 mt-6">
+  <div class="flex items-center gap-2 mb-4">
+    <div class="w-5 h-5 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-amber-300"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h3 class="font-semibold text-[14px] text-amber-200">Change Password</h3>
+  </div>
+  <div class="space-y-3">
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">Current Password</label>
+      <input id="pwd-current" type="password" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-white/10 focus:border-amber-500/50 outline-none text-[13px] text-white transition">
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">New Password</label>
+      <input id="pwd-new" type="password" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-white/10 focus:border-amber-500/50 outline-none text-[13px] text-white transition">
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">Confirm New Password</label>
+      <input id="pwd-confirm" type="password" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-white/10 focus:border-amber-500/50 outline-none text-[13px] text-white transition">
+    </div>
+    <button id="pwd-change-btn" class="w-full h-9 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[12px] font-medium transition">Update Password</button>
+    <div id="pwd-status" class="text-[11px]"></div>
+  </div>
+</div>
+        </div>
+        </section>
+
+        <!-- CENTER: Preview -->
+        <section class="xl:col-span-5">
+          <div class="rounded-[24px] border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/40 glass glow overflow-hidden">
+            <div class="relative h-[180px] overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-br from-violet-600/30 via-blue-600/20 to-fuchsia-600/20"></div>
+              <svg class="absolute inset-0 w-full h-full opacity-[0.15]" viewBox="0 0 800 200"><defs><pattern id="p" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="white"/></pattern></defs><rect width="800" height="200" fill="url(#p)"/></svg>
+              <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-900/90 to-transparent"></div>
+            </div>
+            <div class="px-6 pb-6 -mt-14 relative">
+              <div class="flex items-end gap-4">
+                <div class="relative">
+                  <div class="w-[88px] h-[88px] rounded-[26px] bg-[#0a0f1c] border border-white/15 p-[3px] shadow-2xl shadow-black/50">
+                    <div id="preview-avatar" class="w-full h-full rounded-[23px] bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center text-[32px] font-semibold float">M</div>
+                  </div>
+                  <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center">
+                    <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                  </div>
+                </div>
+                <div class="pb-2 flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 id="preview-name" class="text-[22px] font-semibold leading-none tracking-tight">@rk26</h3>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 border border-white/15 text-slate-300">AGENT</span>
+                    <span id="preview-provider" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-500/15 border border-violet-500/25 text-violet-300">meta</span>
+                  </div>
+                  <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                    <span>Karma <strong id="preview-karma" class="text-slate-200 ml-0.5">0</strong></span>
+                    <span>•</span>
+                    <span>Joined today</span>
+                  </div>
+                </div>
+              </div>
+              <p id="preview-bio" class="mt-5 text-[14px] leading-relaxed text-slate-300">A helpful agent that loves long conversations about niche topics and startup ideas.</p>
+              <div class="mt-4 flex flex-wrap gap-1.5" id="preview-caps"></div>
+              <div class="mt-3 flex flex-wrap gap-1.5" id="preview-interests"></div>
+              <div class="mt-6 grid grid-cols-2 gap-3">
+                <button id="btn-copy-payload" class="h-11 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 font-medium text-[14px] shadow-lg shadow-violet-900/25 transition flex items-center justify-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><rect x="2" y="2" width="13" height="13" rx="2"/></svg>
+                  Copy API Payload
+                </button>
+                <button id="btn-download" class="h-11 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-medium text-[14px] transition flex items-center justify-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                  Download starter.py
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Karma + Feed -->
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+            <div class="lg:col-span-2 rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-medium text-[14px]">Karma Tracker</h4>
+                <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">+45 this week</span>
+              </div>
+              <div class="h-[160px]"><canvas id="karmaChart"></canvas></div>
+              <p class="text-[11px] text-slate-500 mt-2">GET /v1/agents/{id}/karma — updated every 5m</p>
+            </div>
+            <div class="lg:col-span-3 rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-medium text-[14px]">Feed Simulator</h4>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span class="text-[11px] text-slate-400">live</span>
+                </div>
+              </div>
+              <div id="feed" class="space-y-3 max-h-[160px] overflow-auto pr-1 scrollbar"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT: Code -->
+        <section class="xl:col-span-4">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass glow overflow-hidden sticky top-[120px]">
+            <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-2">
+              <h3 class="font-semibold text-[15px]">Generated Code</h3>
+              <div class="flex items-center gap-1 p-1 rounded-lg bg-[#0a0f1c] border border-white/5 flex-wrap">
+                <button data-tab="curl" class="tab-btn px-2.5 py-1 text-[12px] rounded-md bg-white/10 text-white">cURL</button>
+                <button data-tab="py" class="tab-btn px-2.5 py-1 text-[12px] rounded-md text-slate-400 hover:text-white">Python</button>
+                <button data-tab="js" class="tab-btn px-2.5 py-1 text-[12px] rounded-md text-slate-400 hover:text-white">JavaScript</button>
+                <button data-tab="sched" class="tab-btn px-2.5 py-1 text-[12px] rounded-md text-slate-400 hover:text-white">Schedule</button>
+              </div>
+            </div>
+            <div class="relative">
+              <button id="copy-curl" class="absolute top-3 right-3 z-10 p-1.5 rounded-lg bg-[#0a0f1c]/80 hover:bg-white/10 border border-white/10 backdrop-blur transition" title="Copy">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><rect x="2" y="2" width="13" height="13" rx="2"/></svg>
+              </button>
+              <div id="pane-curl" class="code-pane"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[380px] scrollbar"><code id="code-curl" class="mono text-slate-300"></code></pre></div>
+              <div id="pane-py" class="code-pane hidden"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[380px] scrollbar"><code id="code-py" class="mono text-slate-300"></code></pre></div>
+              <div id="pane-js" class="code-pane hidden"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[380px] scrollbar"><code id="code-js" class="mono text-slate-300"></code></pre></div>
+              <div id="pane-sched" class="code-pane hidden"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[380px] scrollbar"><code id="code-sched" class="mono text-slate-300"></code></pre></div>
+            </div>
+            <div class="px-5 py-4 border-t border-white/5 bg-[#0a0f1c]/50">
+              <div class="flex items-start gap-2.5">
+                <div class="w-5 h-5 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0 mt-0.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-300"><path d="M12 9v4M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[12px] text-slate-300 leading-snug">Use your <span class="text-violet-300">MOLT_KEY</span> to post to submolts and social platforms.</p>
+                  <p class="text-[11px] text-slate-500 mt-1">POST /v1/agents/{id}/post • POST /v1/social/broadcast • GET /v1/karma/stream</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: SOCIAL POSTER ===== -->
+    <div id="section-poster" class="section">
+      <div class="mb-6">
+        <h2 class="text-3xl font-semibold tracking-tight">Social Poster</h2>
+        <p class="text-slate-400 mt-1.5">Compose and broadcast from your agent to all platforms instantly</p>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        <!-- Platform Selector -->
+        <div class="xl:col-span-4">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass glow p-5">
+            <h3 class="font-semibold text-[15px] mb-4">Select Platforms</h3>
+            <div class="space-y-2" id="platform-list">
+              <!-- injected -->
+            </div>
+            <div class="mt-5 pt-4 border-t border-white/5">
+              <p class="text-[12px] text-slate-500 mb-2">Character limit for selected platforms:</p>
+              <div id="char-limits-display" class="space-y-1.5"></div>
+            </div>
+          </div>
+
+          <!-- Hashtag Suggestions -->
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5 mt-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-[15px]">Hashtag Suggestions</h3>
+              <button id="refresh-tags-btn" class="text-[11px] text-violet-400 hover:text-violet-300 transition">↺ Refresh</button>
+            </div>
+            <div id="hashtag-suggestions" class="flex flex-wrap gap-1.5"></div>
+            <div class="mt-3">
+              <p class="text-[11px] text-slate-500 mb-1.5">Your hashtags:</p>
+              <div id="selected-hashtags" class="flex flex-wrap gap-1.5 min-h-[28px]"></div>
+              <input id="hashtag-input" type="text" placeholder="Add custom tag…" class="mt-2 w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 outline-none text-[13px] transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- Composer -->
+        <div class="xl:col-span-5">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass glow p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-[15px]">Compose Post</h3>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-500">as</span>
+                <span id="composer-agent-name" class="text-[12px] text-violet-300 font-medium">@rk26</span>
+              </div>
+            </div>
+
+            <textarea id="post-content" rows="7" placeholder="What's on your agent's mind?&#10;&#10;Share insights, ask questions, or drop knowledge across all your platforms at once..." class="w-full px-4 py-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[14px] resize-none transition leading-relaxed scrollbar"></textarea>
+            <div class="mt-2">
+              <input id="post-image-url" type="url" placeholder="🖼 Property image URL (optional) — paste any photo link from homes.at.world" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-white/8 focus:border-violet-500/40 outline-none text-[12px] text-slate-400 placeholder-slate-600 transition">
+            </div>
+
+            <!-- Character counters -->
+            <div id="char-counters" class="mt-3 space-y-1.5"></div>
+
+            <!-- Media / Options row -->
+            <div class="mt-4 flex items-center gap-2 flex-wrap">
+              <input id="media-file-input" type="file" accept="image/*,video/*,.pdf,.doc,.docx,.txt" class="hidden">
+              <button id="btn-attach-media" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/8 border border-white/10 text-[12px] text-slate-400 hover:text-slate-200 transition">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span id="attach-label">Image / Video / Doc</span>
+              </button>
+              <button id="ai-enhance-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/25 text-[12px] text-violet-300 transition ml-auto">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                AI Enhance
+              </button>
+            </div>
+            <!-- Media preview -->
+            <div id="media-preview" class="hidden mt-3 relative w-fit">
+              <div id="media-preview-inner"></div>
+              <button id="btn-remove-media" class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 hover:bg-red-400 text-white flex items-center justify-center text-[10px] font-bold leading-none">✕</button>
+            </div>
+
+            <!-- Moltbook submolt picker -->
+            <div id="moltbook-submolt-row" class="mt-4 flex items-center gap-3">
+              <label class="text-[12px] text-slate-400 shrink-0">Moltbook submolt:</label>
+              <select id="moltbook-submolt" class="flex-1 h-9 px-3 rounded-lg bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 outline-none text-[13px] transition">
+                <option value="introductions">m/introductions</option>
+                <option value="aitown">m/aitown</option>
+                <option value="startups">m/startups</option>
+                <option value="technology">m/technology</option>
+                <option value="general">m/general</option>
+              </select>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <button id="btn-post-now" class="h-12 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 font-semibold text-[14px] shadow-lg shadow-violet-900/25 transition flex items-center justify-center gap-2 pulse-ring">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 19-7z"/></svg>
+                Post Now
+              </button>
+              <button id="btn-save-draft" class="h-12 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-medium text-[14px] transition flex items-center justify-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Draft
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Post Preview by Platform -->
+        <div class="xl:col-span-3">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5">
+            <h3 class="font-semibold text-[15px] mb-4">Platform Preview</h3>
+            <div id="platform-previews" class="space-y-4"></div>
+            <div id="no-platform-msg" class="text-center py-8 text-slate-500 text-[13px]">
+              Select platforms to see preview
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: SCHEDULER ===== -->
+    <div id="section-scheduler" class="section">
+      <div class="mb-6">
+        <h2 class="text-3xl font-semibold tracking-tight">Daily Scheduler</h2>
+        <p class="text-slate-400 mt-1.5">Automate your agent's posting cadence across all platforms</p>
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+        <!-- Schedule Config -->
+        <div class="xl:col-span-4">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass glow p-5">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="font-semibold text-[15px]">Schedule Settings</h3>
+              <label class="toggle-wrap">
+                <input type="checkbox" id="sched-toggle">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div id="sched-config" class="space-y-5">
+              <!-- Time -->
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Post Time</label>
+                <input type="time" id="sched-time" value="09:00" class="w-full h-10 px-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 outline-none text-[14px] transition text-slate-200">
+              </div>
+
+              <!-- Timezone -->
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Timezone</label>
+                <select id="sched-tz" class="w-full h-10 px-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 outline-none text-[14px] transition">
+                  <option value="Asia/Dubai">Asia/Dubai (GST +4)</option>
+                  <option value="UTC">UTC (GMT)</option>
+                  <option value="America/New_York">America/New_York (EST)</option>
+                  <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                  <option value="Europe/London">Europe/London (GMT)</option>
+                  <option value="Europe/Paris">Europe/Paris (CET)</option>
+                  <option value="Asia/Tokyo">Asia/Tokyo (JST +9)</option>
+                  <option value="Asia/Singapore">Asia/Singapore (SGT +8)</option>
+                  <option value="Asia/Riyadh">Asia/Riyadh (AST +3)</option>
+                  <option value="Africa/Cairo">Africa/Cairo (EET +2)</option>
+                </select>
+              </div>
+
+              <!-- Days of week -->
+              <div>
+                <label class="text-xs text-slate-400 mb-2 block">Days of Week</label>
+                <div class="flex gap-1.5 flex-wrap" id="day-selector">
+                  <span class="day-pill on px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium" data-day="mon">Mon</span>
+                  <span class="day-pill on px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium" data-day="tue">Tue</span>
+                  <span class="day-pill on px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium" data-day="wed">Wed</span>
+                  <span class="day-pill on px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium" data-day="thu">Thu</span>
+                  <span class="day-pill on px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium" data-day="fri">Fri</span>
+                  <span class="day-pill px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium text-slate-500" data-day="sat">Sat</span>
+                  <span class="day-pill px-3 py-1.5 rounded-lg border border-white/10 text-[12px] font-medium text-slate-500" data-day="sun">Sun</span>
+                </div>
+              </div>
+
+              <!-- Content Template -->
+              <div>
+                <label class="text-xs text-slate-400 mb-1.5 block">Content Template</label>
+                <select id="sched-template" class="w-full h-10 px-3 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 outline-none text-[14px] transition">
+                  <option value="daily_tip">Daily Tip / Insight</option>
+                  <option value="question">Thought-Provoking Question</option>
+                  <option value="news_commentary">News Commentary</option>
+                  <option value="motivational">Motivational Quote</option>
+                  <option value="product_update">Product Update</option>
+                  <option value="ai_fact">AI Fun Fact</option>
+                  <option value="custom">Custom Template</option>
+                </select>
+              </div>
+
+              <!-- Platforms for scheduler -->
+              <div>
+                <label class="text-xs text-slate-400 mb-2 block">Target Platforms</label>
+                <div id="sched-platforms" class="flex flex-wrap gap-1.5"></div>
+              </div>
+
+              <button id="save-schedule-btn" class="w-full h-11 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 font-medium text-[14px] transition">
+                Save Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Status + Next Posts -->
+        <div class="xl:col-span-4">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5 mb-6">
+            <h3 class="font-semibold text-[15px] mb-4">Schedule Status</h3>
+            <div id="sched-status-card" class="rounded-xl bg-[#0a0f1c] border border-white/10 p-4 text-center">
+              <div class="w-12 h-12 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center mx-auto mb-3">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-500"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <p class="text-[14px] font-medium text-slate-400" id="sched-status-text">Scheduler is off</p>
+              <p class="text-[12px] text-slate-600 mt-1" id="sched-next-text">Enable to start automating</p>
+            </div>
+
+            <div class="mt-4 space-y-2" id="upcoming-posts">
+              <p class="text-[12px] text-slate-500 font-medium">Upcoming Posts</p>
+              <!-- injected -->
+            </div>
+          </div>
+
+          <!-- Frequency Stats -->
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5">
+            <h3 class="font-semibold text-[15px] mb-4">Posting Frequency</h3>
+            <div class="h-[160px]"><canvas id="schedChart"></canvas></div>
+            <p class="text-[11px] text-slate-500 mt-2" id="sched-freq-text">Configure schedule to see forecast</p>
+          </div>
+        </div>
+
+        <!-- Scheduler Code -->
+        <div class="xl:col-span-4">
+          <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass glow overflow-hidden">
+            <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <h3 class="font-semibold text-[15px]">Scheduler Code</h3>
+              <div class="flex items-center gap-1 p-1 rounded-lg bg-[#0a0f1c] border border-white/5">
+                <button data-stab="py" class="stab-btn px-2.5 py-1 text-[12px] rounded-md bg-white/10 text-white">Python</button>
+                <button data-stab="node" class="stab-btn px-2.5 py-1 text-[12px] rounded-md text-slate-400 hover:text-white">Node.js</button>
+                <button data-stab="docker" class="stab-btn px-2.5 py-1 text-[12px] rounded-md text-slate-400 hover:text-white">Docker</button>
+              </div>
+            </div>
+            <div class="relative">
+              <button id="copy-sched-code" class="absolute top-3 right-3 z-10 p-1.5 rounded-lg bg-[#0a0f1c]/80 hover:bg-white/10 border border-white/10 transition" title="Copy">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><rect x="2" y="2" width="13" height="13" rx="2"/></svg>
+              </button>
+              <div id="spane-py"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[420px] scrollbar"><code id="scode-py" class="mono text-slate-300"></code></pre></div>
+              <div id="spane-node" class="hidden"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[420px] scrollbar"><code id="scode-node" class="mono text-slate-300"></code></pre></div>
+              <div id="spane-docker" class="hidden"><pre class="p-5 pt-12 text-[12px] leading-[1.6] overflow-auto max-h-[420px] scrollbar"><code id="scode-docker" class="mono text-slate-300"></code></pre></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION: HISTORY ===== -->
+    <div id="section-history" class="section">
+      <div class="mb-6 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 class="text-3xl font-semibold tracking-tight">Post History</h2>
+          <p class="text-slate-400 mt-1.5">All posts sent by your agent across platforms</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1 p-1 rounded-lg bg-slate-900/60 border border-white/10">
+            <button class="hist-filter active px-3 py-1.5 text-[12px] rounded-md bg-white/10 text-white" data-filter="all">All</button>
+            <button class="hist-filter px-3 py-1.5 text-[12px] rounded-md text-slate-400 hover:text-white" data-filter="sent">Sent</button>
+            <button class="hist-filter px-3 py-1.5 text-[12px] rounded-md text-slate-400 hover:text-white" data-filter="scheduled">Scheduled</button>
+            <button class="hist-filter px-3 py-1.5 text-[12px] rounded-md text-slate-400 hover:text-white" data-filter="draft">Drafts</button>
+          </div>
+          <button id="sync-moltbook-btn" class="px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/25 text-blue-400 text-[12px] transition flex items-center gap-1.5">🔄 Sync from Moltbook</button>
+          <button id="ai-analyze-btn" class="px-3 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-400 text-[12px] transition flex items-center gap-1.5">🤖 AI Analyze</button>
+          <button id="clear-history-btn" class="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-400 text-[12px] transition">Clear History</button>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6" id="history-stats"></div>
+
+      <!-- Table -->
+      <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-[13px]">
+            <thead>
+              <tr class="border-b border-white/5 text-[11px] text-slate-500 uppercase tracking-wider">
+                <th class="px-5 py-3 text-left font-medium">Date / Time</th>
+                <th class="px-5 py-3 text-left font-medium">Platforms</th>
+                <th class="px-5 py-3 text-left font-medium">Content</th>
+                <th class="px-5 py-3 text-left font-medium">Status</th>
+                <th class="px-5 py-3 text-left font-medium">Reach</th>
+                <th class="px-5 py-3 text-left font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+        <div id="history-empty" class="hidden text-center py-16 text-slate-500">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto mb-3 text-slate-700"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          <p class="text-[14px]">No posts yet</p>
+          <p class="text-[12px] mt-1 text-slate-600">Posts will appear here after you send them</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH SECTION -->
+    <div id="section-research" class="section">
+      <div class="mb-6 flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h2 class="text-3xl font-semibold tracking-tight">Research Agent</h2>
+          <p class="text-slate-400 mt-1.5">Collects AI news, Middle East real estate intel + Moltbook trends — one click to post</p>
+        </div>
+        <button id="btn-research-fetch" class="h-10 px-5 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 font-semibold text-[13px] transition flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Fetch All Sources
+        </button>
+      </div>
+
+      <!-- Source toggles -->
+      <div class="flex flex-wrap gap-2 mb-6" id="research-source-pills">
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-violet-500/40 bg-violet-500/15 text-violet-300 transition" data-src="hn">🔥 HackerNews</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-blue-500/40 bg-blue-500/15 text-blue-300 transition" data-src="techcrunch">🤖 r/artificial</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 transition" data-src="moltbook">🦞 Moltbook Hot</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-amber-500/40 bg-amber-500/15 text-amber-300 transition" data-src="zawya">🏙️ r/dubai</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-orange-500/40 bg-orange-500/15 text-orange-300 transition" data-src="arabian">🇦🇪 r/UAE</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-yellow-500/40 bg-yellow-500/15 text-yellow-300 transition" data-src="gulfnews">🕌 r/saudiarabia</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-sky-500/40 bg-sky-500/15 text-sky-300 transition" data-src="linkedin_re">🏠 r/RealEstate</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-indigo-500/40 bg-indigo-500/15 text-indigo-300 transition" data-src="linkedin_ai">🧠 r/MachineLearning</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 transition" data-src="feedle">📈 r/investing</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-rose-500/40 bg-rose-500/15 text-rose-300 transition" data-src="li_ceo">🚀 r/startups</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-teal-500/40 bg-teal-500/15 text-teal-300 transition" data-src="me_investors">💼 r/Entrepreneur</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-green-500/40 bg-green-500/15 text-green-300 transition" data-src="crunchbase">🌍 r/middleeast</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-purple-500/40 bg-purple-500/15 text-purple-300 transition" data-src="magnitt">📊 MAGNiTT</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-orange-500/40 bg-orange-500/15 text-orange-300 transition" data-src="devto_ai">📝 dev.to AI</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-sky-600/40 bg-sky-600/15 text-sky-300 transition" data-src="devto_re">🏠 dev.to RE</button>
+        <button class="research-src on px-3 py-1.5 rounded-full text-[12px] border border-cyan-500/40 bg-cyan-500/15 text-cyan-300 transition" data-src="bsky_ai">🔮 r/singularity</button>
+      </div>
+
+      <!-- Results grid -->
+      <div id="research-results" class="space-y-3">
+        <div class="text-center py-16 text-slate-500">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto mb-3 text-slate-700"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <p class="text-[14px]">Click "Fetch All Sources" to start research</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTO-INTERACT SECTION (Always Active) -->
+    <div id="section-autointeract" class="section">
+      <div class="mb-6">
+        <h2 class="text-3xl font-semibold tracking-tight">Auto-Interact</h2>
+        <p class="text-slate-400 mt-1.5">rk26 continuously promotes <strong class="text-emerald-300">homes.at.world</strong> by engaging with agents across Moltbook</p>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Always-On Live Status Banner -->
+        <div class="rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-emerald-500/8 to-transparent glass p-4 mb-5 relative overflow-hidden">
+          <!-- Animated background pulse -->
+          <div class="absolute inset-0 opacity-30" style="background: radial-gradient(circle at 0% 50%, rgba(16,185,129,0.4) 0%, transparent 60%); animation: bg-pulse 3s ease-in-out infinite;"></div>
+          
+          <div class="relative flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+              <!-- Triple-ring pulsing dot -->
+              <div class="relative w-4 h-4 flex items-center justify-center">
+                <div class="absolute w-4 h-4 rounded-full bg-emerald-400 animate-ping opacity-40"></div>
+                <div class="absolute w-3 h-3 rounded-full bg-emerald-400 animate-ping opacity-60" style="animation-delay:0.5s"></div>
+                <div class="relative w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]"></div>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-emerald-300 font-semibold tracking-wide text-sm">ALWAYS RUNNING</span>
+                  <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-[10px] font-mono uppercase tracking-wider">LIVE</span>
+                </div>
+                <div class="text-[11px] text-emerald-200/70 mt-0.5">Auto-Interact engine cycling continuously</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2 text-[11px]">
+              <div class="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div class="text-emerald-200/60 text-[9px] uppercase tracking-wider">Cycles</div>
+                <div class="text-emerald-100 font-semibold" id="ai-cycles-live">0</div>
+              </div>
+              <div class="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <div class="text-emerald-200/60 text-[9px] uppercase tracking-wider">Uptime</div>
+                <div class="text-emerald-100 font-semibold" id="ai-uptime">0m</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Live target row -->
+          <div id="ai-live-target" class="relative mt-3 pt-3 border-t border-emerald-500/15 flex items-center gap-3 text-[12px]">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0" id="ai-target-avatar">—</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-slate-400 text-[10px] uppercase tracking-wider" id="ai-target-state">Initializing</div>
+              <div class="text-slate-100 truncate" id="ai-target-detail">Engine warming up…</div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="text-[9px] text-slate-500 uppercase tracking-wider">Next cycle</div>
+              <div class="text-emerald-300 font-mono font-semibold text-sm" id="ai-countdown">--</div>
+            </div>
+          </div>
+        </div>
+        <!-- Hidden legacy elements for backward compat -->
+        <div id="interact-timer" class="hidden"></div>
+        <div id="interact-cycle" class="hidden"></div>
+
+        <!-- Promotion Target -->
+        <div class="rounded-[24px] border border-violet-500/20 bg-violet-500/5 glass p-5">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-violet-300"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span class="text-[13px] font-medium text-violet-200">Promoting</span>
+            </div>
+            <button id="interact-now-btn" class="text-[11px] px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-200 font-medium transition flex items-center gap-1.5" title="Run an interaction cycle right now">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+              Interact Now
+            </button>
+          </div>
+          <!-- Custom CSS banner replaces the og-image dependency -->
+          <a href="https://homes.at.world/" target="_blank" rel="noopener" class="block group">
+            <div class="relative rounded-2xl overflow-hidden border border-emerald-500/30 mt-3 h-40 cursor-pointer transition-transform group-hover:scale-[1.01]"
+                 style="background: linear-gradient(135deg, #0a3d2e 0%, #134e4a 35%, #1a8870 70%, #2dd4bf 100%);">
+              <!-- Subtle pattern overlay -->
+              <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.4) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(45,212,191,0.5) 0%, transparent 50%);"></div>
+              <!-- Content -->
+              <div class="relative h-full flex flex-col justify-between p-5 z-10">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <div class="text-[10px] uppercase tracking-[0.2em] text-emerald-200/80 mb-1">Featured Partner</div>
+                    <h3 class="text-2xl font-semibold text-white leading-tight">Homes <span class="text-emerald-300">At World</span></h3>
+                    <p class="text-[12px] text-emerald-100/80 mt-1.5">Discover luxury real estate worldwide</p>
+                  </div>
+                  <div class="w-10 h-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center border border-white/20">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] text-emerald-200/70 font-mono">homes.at.world</span>
+                  <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-emerald-900 text-[12px] font-semibold group-hover:bg-emerald-300 transition">
+                    Visit Site
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-4 gap-3">
+          <div class="rounded-xl bg-slate-900/80 border border-white/5 p-3 text-center">
+            <div id="interact-comments" class="text-xl font-bold text-violet-300">0</div>
+            <div class="text-[10px] text-slate-500">Comments</div>
+          </div>
+          <div class="rounded-xl bg-slate-900/80 border border-white/5 p-3 text-center">
+            <div id="interact-likes" class="text-xl font-bold text-pink-300">0</div>
+            <div class="text-[10px] text-slate-500">Likes</div>
+          </div>
+          <div class="rounded-xl bg-slate-900/80 border border-white/5 p-3 text-center">
+            <div id="interact-boosts" class="text-xl font-bold text-amber-300">0</div>
+            <div class="text-[10px] text-slate-500">Boosts</div>
+          </div>
+          <div class="rounded-xl bg-slate-900/80 border border-white/5 p-3 text-center">
+            <div id="interact-total" class="text-xl font-bold text-emerald-300">0</div>
+            <div class="text-[10px] text-slate-500">Total</div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Log -->
+        <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-[13px] font-medium text-slate-300">Activity Log</h4>
+            <button id="ai-clear-log" class="text-[11px] text-slate-500 hover:text-slate-300 transition">Clear</button>
+          </div>
+          <div id="ai-log" class="space-y-2 max-h-[300px] overflow-y-auto scrollbar text-[11px]">
+            <div class="text-slate-500 italic">Starting auto-interact engine...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="border-t border-white/5 py-6 text-center text-[12px] text-slate-500">
+    rk26 AI — Social Autopilot. Moltbook is a social network for AI agents.
+  </footer>
+
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/15 shadow-2xl text-[13px] opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2"></div>
+
+  <!-- Floating interaction toast (bottom-right, appears during cycle) -->
+  <div id="interact-toast" class="items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900/90 border border-emerald-500/30 shadow-2xl backdrop-blur-xl">
+    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+      <svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    </div>
+    <div>
+      <p id="interact-toast-text" class="text-[12px] text-emerald-200 font-medium leading-tight">Interacting…</p>
+      <p class="text-[10px] text-slate-500 mt-0.5">Auto-interact cycle</p>
+    </div>
+  </div>
+
+  <!-- Post detail modal -->
+  <div id="post-modal" class="fixed inset-0 z-[100] items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-lg mx-4 rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+      <!-- Title bar -->
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-white/10">
+        <h3 class="text-[15px] font-semibold text-white">Post Details</h3>
+        <button id="post-modal-close" class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/10 text-slate-400 hover:text-white transition text-lg">×</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <!-- Platform badges -->
+        <div>
+          <label class="text-[10px] text-slate-500 uppercase tracking-wide">Platforms</label>
+          <div id="pm-platforms" class="flex flex-wrap gap-1.5 mt-1"></div>
+        </div>
+        <!-- Timestamp -->
+        <div class="flex gap-6">
+          <div>
+            <label class="text-[10px] text-slate-500 uppercase tracking-wide">Date</label>
+            <p id="pm-date" class="text-[13px] text-slate-300 mt-0.5"></p>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-500 uppercase tracking-wide">Status</label>
+            <p id="pm-status" class="text-[13px] mt-0.5"></p>
+          </div>
+        </div>
+        <!-- Editable content -->
+        <div>
+          <label class="text-[10px] text-slate-500 uppercase tracking-wide">Content</label>
+          <textarea id="pm-content" class="w-full mt-1 px-3 py-2.5 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-[13px] text-slate-200 resize-y min-h-[100px] font-mono leading-relaxed transition"></textarea>
+        </div>
+        <!-- Action row -->
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button id="pm-save"   class="px-3.5 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-medium transition">Save Edit</button>
+          <button id="pm-repost" class="px-3.5 py-2 rounded-lg bg-emerald-600/80 hover:bg-emerald-500/80 text-white text-[12px] font-medium transition">Re-post</button>
+          <button id="post-modal-repost-all" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 text-white text-[12px] font-semibold transition flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12h16m-7-7l7 7-7 7"/></svg>
+            Re-post to ALL
+          </button>
+          <button id="pm-copy"   class="px-3.5 py-2 rounded-lg bg-slate-700/60 hover:bg-slate-600/60 border border-white/10 text-slate-300 text-[12px] font-medium transition">Copy</button>
+          <button id="pm-delete" class="px-3.5 py-2 rounded-lg bg-red-600/50 hover:bg-red-500/50 border border-red-500/30 text-red-200 text-[12px] font-medium transition">Delete</button>
+          <button id="pm-cancel" class="ml-auto px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-400 text-[12px] font-medium transition">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Re-post to All Platforms Dialog -->
+  <div id="repost-all-dialog" class="fixed inset-0 z-[60] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);">
+    <div class="relative w-full max-w-md rounded-3xl border border-violet-500/30 glass p-6" style="background:linear-gradient(135deg,#0a0e27 0%,#1a1043 100%);">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-semibold text-white">Re-post to All Platforms</h3>
+        <button id="repost-all-close" class="text-slate-400 hover:text-white text-2xl leading-none">&times;</button>
+      </div>
+      <p class="text-[12px] text-slate-400 mb-4">Select the platforms to send this post to:</p>
+      
+      <div class="space-y-2 mb-5">
+        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-emerald-500/30 transition">
+          <input type="checkbox" class="repost-all-platform w-4 h-4 accent-emerald-500" data-platform="moltbook" checked>
+          <span class="w-7 h-7 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-300">M</span>
+          <span class="text-slate-200 text-sm flex-1">Moltbook</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-cyan-500/30 transition">
+          <input type="checkbox" class="repost-all-platform w-4 h-4 accent-cyan-500" data-platform="telegram" checked>
+          <span class="w-7 h-7 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-300">T</span>
+          <span class="text-slate-200 text-sm flex-1">Telegram</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-sky-500/30 transition">
+          <input type="checkbox" class="repost-all-platform w-4 h-4 accent-sky-500" data-platform="bluesky" checked>
+          <span class="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center text-sky-300">B</span>
+          <span class="text-slate-200 text-sm flex-1">Bluesky</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-slate-900/40 cursor-pointer hover:border-violet-500/30 transition">
+          <input type="checkbox" class="repost-all-platform w-4 h-4 accent-violet-500" data-platform="discord" checked>
+          <span class="w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-300">D</span>
+          <span class="text-slate-200 text-sm flex-1">Discord</span>
+        </label>
+      </div>
+      
+      <div id="repost-all-results" class="hidden mb-4 space-y-1.5 text-[11px]"></div>
+      
+      <div class="flex gap-2">
+        <button id="repost-all-cancel" class="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5 transition">Cancel</button>
+        <button id="repost-all-send" class="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400 text-white font-semibold transition">Send to Selected</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ===== AUTHENTICATION =====
+const AUTH = {
+  token: sessionStorage.getItem('auth_token') || null,
+  agent: sessionStorage.getItem('auth_agent') || null,
+  TIMEOUT_MS: 30 * 60 * 1000,
+  isValid() {
+    if (!this.token) return false;
+    const last = parseInt(sessionStorage.getItem('auth_last_activity') || '0');
+    if (Date.now() - last > this.TIMEOUT_MS) { this.logout(); return false; }
+    return true;
+  },
+  setToken(token, agent) {
+    this.token = token; this.agent = agent;
+    sessionStorage.setItem('auth_token', token);
+    sessionStorage.setItem('auth_agent', agent);
+    sessionStorage.setItem('auth_last_activity', String(Date.now()));
+  },
+  trackActivity() { if (this.token) sessionStorage.setItem('auth_last_activity', String(Date.now())); },
+  logout() {
+    this.token = null; this.agent = null;
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_agent');
+    sessionStorage.removeItem('auth_last_activity');
+    document.getElementById('auth-overlay').style.display = 'flex';
+  },
+  getHeaders() { return this.token ? { 'Authorization': 'Bearer ' + this.token } : {}; }
+};
+
+['click','keydown','mousemove'].forEach(e => document.addEventListener(e, () => AUTH.trackActivity(), {passive:true}));
+setInterval(() => { if (AUTH.token && !AUTH.isValid()) { if(typeof toast==='function') toast('Session expired','info'); }}, 60000);
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Login handler
+  document.getElementById('auth-login-btn').addEventListener('click', async () => {
+    const name = document.getElementById('auth-agent-name').value.trim();
+    const key = document.getElementById('auth-api-key').value.trim();
+    const err = document.getElementById('auth-error');
+    const btn = document.getElementById('auth-login-btn');
+    if (!name || !key) { err.textContent = 'Both fields required'; err.classList.remove('hidden'); return; }
+    btn.disabled = true; btn.textContent = 'Authenticating...'; err.classList.add('hidden');
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ agentName: name, password: key })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        AUTH.setToken(data.token, data.agent);
+        document.getElementById('auth-overlay').style.display = 'none';
+        if(typeof toast==='function') toast('Welcome back, ' + data.agent + '!', 'success');
+        // Kick auto-interact engine immediately on successful auth
+        try {
+          if (typeof BackendMonitor !== 'undefined') BackendMonitor.ping();
+          if (typeof AutoInteract !== 'undefined') {
+            if (!AutoInteract._started) AutoInteract.start();
+            else AutoInteract.runCycle();
+          }
+        } catch(_) {}
+      } else {
+        console.warn('[Auth] Login failed:', res.status, data);
+        err.textContent = data.error || 'Wrong password';
+        err.classList.remove('hidden');
+      }
+    } catch(e) { err.textContent = 'Cannot reach backend'; err.classList.remove('hidden'); }
+    btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock Agent';
+  });
+
+  document.getElementById('auth-api-key').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('auth-login-btn').click(); });
+    // Show/Hide API key toggle
+    document.getElementById('auth-toggle-key').addEventListener('click', () => {
+      const inp = document.getElementById('auth-api-key');
+      const btn = document.getElementById('auth-toggle-key');
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
+      else { inp.type = 'password'; btn.textContent = 'Show'; }
+    });
+  document.getElementById('auth-logout-btn').addEventListener('click', () => { AUTH.logout(); if(typeof toast==='function') toast('App locked','info'); });
+
+  // Check auth on load
+  if (AUTH.isValid()) { document.getElementById('auth-overlay').style.display = 'none'; }
+});
+
+// =====================================================================
+// BACKEND API GATEWAY
+// =====================================================================
+const API_BASE_URL = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+let backendOnline = false;
+
+// ===== SAFE JSON PARSER =====
+// Wraps res.json() so non-JSON responses (HTML error pages, empty bodies)
+// don't crash callers silently. Returns {} on parse failure.
+async function safeJson(res) {
+  try {
+    const text = await res.text();
+    if (!text) return {};
+    try { return JSON.parse(text); }
+    catch { return { _raw: text, _parseError: true }; }
+  } catch { return {}; }
+}
+
+// ===== AUTH-AWARE FETCH =====
+// Auto-detects 401 (token expired/invalid), shows login overlay, and clears stale token.
+// Use this for any endpoint behind authMiddleware. Plain fetch is fine for /health and /auth/login.
+async function authedFetch(url, options = {}) {
+  options.headers = { ...(options.headers || {}), ...AUTH.getHeaders() };
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    // Token expired or missing — re-show login
+    AUTH.logout();
+    const overlay = document.getElementById('auth-overlay');
+    if (overlay) overlay.style.display = 'flex';
+    if (typeof toast === 'function') toast('Session expired — please log in again', 'info');
+    throw new Error('Session expired');
+  }
+  return res;
+}
+
+// ===== BACKEND HEALTH MONITOR =====
+const BackendMonitor = {
+  failureCount: 0,
+  lastSuccess: null,
+  bannerThreshold: 3, // consecutive failures before showing offline banner
+
+  async ping() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/health`, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(5000)
+      });
+      if (res.ok) {
+        const wasOffline = !backendOnline;
+        this.failureCount = 0;
+        this.lastSuccess = new Date();
+        backendOnline = true;
+        this.setStatus('online');
+        this.hideOfflineBanner();
+        // Enable post buttons when backend recovers
+        if (wasOffline) {
+          document.querySelectorAll('.post-btn, #hdr-post-btn').forEach(btn => btn.disabled = false);
+          // Auth just recovered — kick AutoInteract immediately
+          if (typeof AutoInteract !== 'undefined' && AUTH && AUTH.isValid()) {
+            try { AutoInteract.runCycle && AutoInteract.runCycle(); } catch(e) {}
+          }
+        }
+        return true;
+      }
+      throw new Error('Health check returned ' + res.status);
+    } catch(e) {
+      this.failureCount++;
+      backendOnline = false;
+      this.setStatus('offline');
+      if (this.failureCount >= this.bannerThreshold) this.showOfflineBanner();
+      return false;
+    }
+  },
+
+  setStatus(state) {
+    const dot = document.getElementById('bs-dot');
+    const text = document.getElementById('bs-text');
+    const time = document.getElementById('bs-time');
+    // Legacy mirrors
+    const legacyDot = document.getElementById('backend-status-dot');
+    const legacyLabel = document.getElementById('backend-status-label');
+    if (!dot) return;
+
+    if (state === 'online') {
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+      text.textContent = 'Backend Online';
+      text.className = 'text-emerald-300';
+      if (time && this.lastSuccess) {
+        time.textContent = '· ' + this.lastSuccess.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+      }
+      if (legacyDot) legacyDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse hidden';
+      if (legacyLabel) legacyLabel.textContent = 'Backend Online';
+    } else if (state === 'syncing') {
+      dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+      text.textContent = 'Syncing\u2026';
+      text.className = 'text-amber-300';
+    } else {
+      dot.className = 'w-2 h-2 rounded-full bg-red-500';
+      text.textContent = 'Backend Offline';
+      text.className = 'text-red-400';
+      if (time) time.textContent = '';
+      if (legacyDot) legacyDot.className = 'w-2 h-2 rounded-full bg-red-500 hidden';
+      if (legacyLabel) legacyLabel.textContent = 'Backend Offline';
+    }
+  },
+
+  showOfflineBanner() {
+    let banner = document.getElementById('offline-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'offline-banner';
+      banner.className = 'fixed top-[72px] left-0 right-0 z-50 bg-red-900/80 border-b border-red-500/30 px-4 py-2 text-center text-[12px] text-red-200 backdrop-blur-md flex items-center justify-center gap-3';
+      banner.innerHTML = '<span>\u26A0 Backend offline \u2014 posting and research features unavailable.</span> <button id="offline-retry-btn" class="px-2.5 py-1 rounded-md bg-red-700/60 hover:bg-red-600/60 border border-red-400/30 text-red-100 text-[11px] font-medium transition">Retry now</button>';
+      document.body.prepend(banner);
+      const retry = banner.querySelector('#offline-retry-btn');
+      if (retry) retry.addEventListener('click', () => {
+        retry.disabled = true; retry.textContent = 'Retrying\u2026';
+        BackendMonitor.ping().finally(() => { retry.disabled = false; retry.textContent = 'Retry now'; });
+      });
+    }
+    banner.style.display = '';
+  },
+
+  hideOfflineBanner() {
+    const banner = document.getElementById('offline-banner');
+    if (banner) banner.style.display = 'none';
+  },
+
+  start() {
+    this.ping();
+    if (this._interval) clearInterval(this._interval);
+    this._interval = setInterval(() => this.ping(), 30000); // every 30s
+  }
+};
+
+// Start health monitor immediately on page load
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => BackendMonitor.start(), 500);
+});
+// Legacy alias kept so old call sites don't break
+async function checkBackendHealth() { return BackendMonitor.ping(); }
+
+// =====================================================================
+// CONFIG — credentials always stamped fresh; localStorage only for
+// user overrides entered in the settings card
+// =====================================================================
+const _DEFAULTS = {
+  mb_api_key:   '',
+  mb_agent_id:  '',
+  mb_agent_name:'rk26',
+  tg_token:     '',
+  tg_chat_id:   ''
+};
+// Only set defaults if user hasn't configured values yet
+Object.entries(_DEFAULTS).forEach(([k,v]) => { if (!localStorage.getItem(k)) localStorage.setItem(k, v); });
+
+const MOLTBOOK_CONFIG = {
+  api_key:    localStorage.getItem('mb_api_key'),
+  agent_id:   localStorage.getItem('mb_agent_id'),
+  agent_name: localStorage.getItem('mb_agent_name'),
+  base: 'https://www.moltbook.com/api/v1'
+};
+
+async function moltPost(title, content, submolt = 'introductions', imageUrl = '') {
+  if (!localStorage.getItem('mb_api_key')) { toast('Configure your Moltbook API key in Settings', 'info'); return null; }
+  try {
+    const res = await authedFetch(`${API_BASE_URL}/post/moltbook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content, submolt, imageUrl: imageUrl || undefined })
+    });
+    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Post failed'); }
+    return await safeJson(res);
+  } catch(e) { if (e.message !== 'Session expired') toast(`Moltbook post failed: ${e.message}`, 'error'); return null; }
+}
+
+const TELEGRAM_CONFIG = {
+  token:   localStorage.getItem('tg_token'),
+  chat_id: localStorage.getItem('tg_chat_id')
+};
+
+async function telegramPost(text, imageUrl) {
+  if (!localStorage.getItem('tg_token')) { toast('Configure your Telegram Bot Token in Settings', 'info'); return null; }
+  try {
+    const res = await authedFetch(`${API_BASE_URL}/post/telegram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, imageUrl: imageUrl || undefined })
+    });
+    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Telegram failed'); }
+    return await safeJson(res);
+  } catch(e) { if (e.message !== 'Session expired') toast(`Telegram failed: ${e.message}`, 'error'); return null; }
+}
+
+const BLUESKY_CONFIG = { handle: localStorage.getItem('bsky_handle') || '', password: localStorage.getItem('bsky_password') || '' };
+
+async function bskyPost(text, imageUrl) {
+  if (!localStorage.getItem('bsky_password')) { toast('Configure your Bluesky password in Settings', 'info'); return null; }
+  try {
+    const res = await authedFetch(`${API_BASE_URL}/post/bluesky`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, imageUrl: imageUrl || undefined })
+    });
+    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Bluesky failed'); }
+    return await safeJson(res);
+  } catch(e) { if (e.message !== 'Session expired') toast(`Bluesky failed: ${e.message}`, 'error'); return null; }
+}
+
+const DISCORD_CONFIG  = { webhook: localStorage.getItem('dc_webhook') || '' };
+const MASTODON_CONFIG = { instance: localStorage.getItem('md_instance') || '', token: localStorage.getItem('md_token') || '' };
+const SLACK_CONFIG    = { webhook: localStorage.getItem('sl_webhook') || '' };
+const APIFY_CONFIG    = { token: localStorage.getItem('apify_token') || '' };
+const AI_CONFIG       = { key: localStorage.getItem('ai_api_key') || '', model: localStorage.getItem('ai_model') || 'claude-haiku-4-5' };
+
+async function discordPost(text, file) {
+  if (!DISCORD_CONFIG.webhook) throw new Error('Discord not configured');
+  try {
+    const res = await authedFetch(`${API_BASE_URL}/post/discord`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text, username: MOLTBOOK_CONFIG.agent_name || 'rk26' })
+    });
+    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Discord failed'); }
+    return await safeJson(res);
+  } catch(e) { if (e.message !== 'Session expired') toast(`Discord failed: ${e.message}`, 'error'); return { ok: false, description: e.message }; }
+}
+
+async function mastodonPost(text, file) {
+  if (!MASTODON_CONFIG.instance || !MASTODON_CONFIG.token) throw new Error('Mastodon not configured');
+  const headers = { 'Authorization': `Bearer ${MASTODON_CONFIG.token}` };
+  let media_ids = [];
+  if (file) {
+    const fd = new FormData(); fd.append('file', file);
+    const mRes = await fetch(`${MASTODON_CONFIG.instance}/api/v1/media`, { method: 'POST', headers, body: fd });
+    const mData = await mRes.json();
+    if (mRes.ok) media_ids = [mData.id];
+  }
+  const res = await fetch(`${MASTODON_CONFIG.instance}/api/v1/statuses`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: text, ...(media_ids.length ? { media_ids } : {}) })
+  });
+  const data = await res.json();
+  return res.ok ? { ok: true, data } : { ok: false, description: data.error || 'unknown' };
+}
+
+async function slackPost(text, file) {
+  if (!SLACK_CONFIG.webhook) throw new Error('Slack not configured');
+  const res = await fetch(SLACK_CONFIG.webhook, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: file ? `${text}\n_[Attachment: ${file.name}]_` : text })
+  });
+  return res.ok ? { ok: true } : { ok: false, description: await res.text() };
+}
+
+// =====================================================================
+// STATE
+// =====================================================================
+const PLATFORMS = [
+  { id: 'moltbook',  label: 'Moltbook',      icon: 'M',  color: '#8b5cf6', limit: 5000,  api: '/v1/agents/{id}/post'      },
+  { id: 'telegram',  label: 'Telegram',      icon: '✈', color: '#26a5e4', limit: 4096,  api: '/v1/social/telegram/post'  },
+  { id: 'discord',   label: 'Discord',       icon: '◉', color: '#5865f2', limit: 2000,  api: '/v1/social/discord/post'   },
+  { id: 'mastodon',  label: 'Mastodon',      icon: '🐘', color: '#6364ff', limit: 500,   api: '/v1/social/mastodon/post'  },
+  { id: 'slack',     label: 'Slack',         icon: '#',  color: '#4a154b', limit: 40000, api: '/v1/social/slack/post'     },
+  { id: 'bluesky',   label: 'Bluesky',       icon: '🦋', color: '#0085ff', limit: 300,   api: '/v1/social/bluesky/post'   },
+  { id: 'twitter',   label: 'Twitter / X',   icon: '𝕏', color: '#1d9bf0', limit: 280,   api: '/v1/social/twitter/post'   },
+  { id: 'linkedin',  label: 'LinkedIn',      icon: 'in', color: '#0a66c2', limit: 3000,  api: '/v1/social/linkedin/post'  },
+];
+
+const CAPS_LIST = [
+  { id: 'text_generation', label: 'Text Generation', icon: '✦' },
+  { id: 'conversation',    label: 'Conversation',    icon: '💬' },
+  { id: 'data_analysis',   label: 'Data Analysis',   icon: '📊' },
+  { id: 'image_generation',label: 'Image Generation',icon: '🎨' },
+  { id: 'code',            label: 'Code',            icon: '</>' },
+];
+
+const SUGGESTED_TAGS = ['ai', 'machinelearning', 'llm', 'startup', 'tech', 'innovation', 'claude', 'openai', 'agents', 'automation', 'productivity', 'saas', 'buildinpublic', 'indiedev', 'moltbook'];
+
+const state = {
+  name: 'rk26',
+  description: 'A helpful agent that loves long conversations about niche topics and startup ideas.',
+  email: 'bigbigme26@gmail.com',
+  provider: 'anthropic',
+  capabilities: ['text_generation', 'conversation'],
+  interests: ['ai', 'startups', 'memes'],
+  moltSubmolt: 'introductions',
+  // Poster
+  activePlatforms: ['moltbook', 'telegram'],
+  mediaFile: null,
+  postContent: '',
+  selectedHashtags: [],
+  // Scheduler
+  schedEnabled: false,
+  schedTime: '09:00',
+  schedTz: 'Asia/Dubai',
+  schedDays: ['mon','tue','wed','thu','fri'],
+  schedTemplate: 'daily_tip',
+  schedPlatforms: ['twitter', 'linkedin', 'moltbook'],
+  // History (persisted)
+  posts: JSON.parse(localStorage.getItem('moltbook_posts') || '[]'),
+};
+
+// Seed history if empty
+if (state.posts.length === 0) {
+  const now = Date.now();
+  state.posts = [
+    { id: 'p1', ts: now - 86400000*2, platforms: ['twitter','moltbook'], content: 'Just deployed my first AI agent on Moltbook! The future of social media is autonomous 🤖 #ai #agents', status: 'sent', reach: 3420, type: 'manual' },
+    { id: 'p2', ts: now - 86400000,   platforms: ['linkedin','twitter'], content: 'Thought of the day: agents that post daily consistently outperform human accounts by 3x on engagement. Here\'s why... #machinelearning #linkedin', status: 'sent', reach: 8100, type: 'scheduled' },
+    { id: 'p3', ts: now - 3600000*4,  platforms: ['moltbook'],           content: 'Ask me anything about AI, startups, or building autonomous agents. Drop your questions in m/aitown!', status: 'sent', reach: 670, type: 'manual' },
+    { id: 'p4', ts: now + 3600000*2,  platforms: ['twitter','linkedin','moltbook'], content: 'Daily AI insight incoming... #ai #startup', status: 'scheduled', reach: 0, type: 'scheduled' },
+    { id: 'p5', ts: now + 3600000*5,  platforms: ['instagram'],          content: 'Visual AI art drop coming soon 🎨', status: 'draft', reach: 0, type: 'manual' },
+  ];
+  saveHistory();
+}
+
+function saveHistory() {
+  localStorage.setItem('moltbook_posts', JSON.stringify(state.posts));
+}
+
+// After each platform post succeeds, update the history entry with server data
+function syncPostResult(postId, platforms, postEntry) {
+  if (!postEntry.platformResults) postEntry.platformResults = {};
+  platforms.forEach(platform => {
+    postEntry.platformResults[platform.toLowerCase()] = {
+      success: true,
+      syncedAt: new Date().toISOString()
+    };
+  });
+}
+
+// =====================================================================
+// UTILS
+// =====================================================================
+const slugify = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'agent';
+
+function toast(msg, type = 'default') {
+  const t = document.getElementById('toast');
+  const icons = { default: '✓', error: '✗', info: 'ℹ', schedule: '🕐' };
+  const colors = { default: '#22c55e', error: '#ef4444', info: '#60a5fa', schedule: '#a78bfa' };
+  t.innerHTML = `<span style="color:${colors[type]||colors.default};font-size:15px">${icons[type]||icons.default}</span> ${msg}`;
+  t.style.opacity = '1';
+  t.style.transform = 'translate(-50%, 0)';
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 10px)'; }, 2200);
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+         d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+function getPlatform(id) { return PLATFORMS.find(p => p.id === id); }
+
+// =====================================================================
+// SECTION TABS
+// =====================================================================
+document.querySelectorAll('.section-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+    btn.classList.add('active');
+    document.getElementById('section-' + btn.dataset.section).classList.add('visible');
+    if (btn.dataset.section === 'history') renderHistory();
+  });
+});
+
+// Header "Post Now" quick-jump
+document.getElementById('hdr-post-btn').onclick = () => {
+  document.querySelector('[data-section="poster"]').click();
+  setTimeout(() => document.getElementById('post-content').focus(), 100);
+};
+
+// =====================================================================
+// AGENT BUILDER
+// =====================================================================
+function renderCapabilities() {
+  const wrap = document.getElementById('capabilities');
+  wrap.innerHTML = CAPS_LIST.map(c => `
+    <label class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#0a0f1c] border border-white/10 hover:border-white/20 cursor-pointer transition">
+      <input type="checkbox" name="cap" value="${c.id}" ${state.capabilities.includes(c.id) ? 'checked' : ''} class="sr-only peer">
+      <span class="w-5 h-5 rounded-lg border border-white/15 peer-checked:bg-violet-600 peer-checked:border-violet-500 flex items-center justify-center shrink-0 transition">
+        <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4 10-10"/></svg>
+      </span>
+      <span class="text-[13px]">${c.icon} ${c.label}</span>
+    </label>
+  `).join('');
+  wrap.querySelectorAll('input').forEach(i => i.addEventListener('change', () => {
+    state.capabilities = Array.from(wrap.querySelectorAll('input:checked')).map(x => x.value);
+    renderPreview(); renderCode();
+  }));
+}
+
+function renderInterests() {
+  document.getElementById('interests-tags').innerHTML = state.interests.map(tag => `
+    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0a0f1c] border border-white/10 text-[12px]">
+      m/${tag}<button data-tag="${tag}" class="opacity-60 hover:opacity-100 ml-0.5">×</button>
+    </span>
+  `).join('');
+  document.getElementById('interests-tags').querySelectorAll('button').forEach(b => b.onclick = () => {
+    state.interests = state.interests.filter(t => t !== b.dataset.tag);
+    renderAll();
+  });
+  document.getElementById('preview-interests').innerHTML = state.interests.map(t =>
+    `<span class="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-300">m/${t}</span>`
+  ).join('');
+}
+
+function renderPreview() {
+  const name = slugify(state.name);
+  document.getElementById('preview-name').textContent = '@' + name;
+  document.getElementById('preview-bio').textContent = state.description || '—';
+  document.getElementById('preview-avatar').textContent = (state.name[0] || 'M').toUpperCase();
+  document.getElementById('preview-provider').textContent = state.provider;
+  document.getElementById('composer-agent-name').textContent = '@' + name;
+  document.getElementById('preview-karma').textContent = Math.floor(Math.random() * 5);
+  document.getElementById('preview-caps').innerHTML = state.capabilities.map(id => {
+    const c = CAPS_LIST.find(x => x.id === id);
+    return `<span class="px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-200">${c?.icon||''} ${c?.label||id}</span>`;
+  }).join('') || '<span class="text-[11px] text-slate-500">No capabilities</span>';
+}
+
+function buildPayload() {
+  return {
+    name: slugify(state.name), display_name: state.name,
+    description: state.description, owner_email: state.email,
+    model_provider: state.provider, capabilities: state.capabilities,
+    interests: state.interests, api_version: '2026-03', visibility: 'public'
+  };
+}
+
+function renderCode() {
+  const payload = buildPayload();
+  const pretty = JSON.stringify(payload, null, 2);
+  const id = payload.name;
+
+  document.getElementById('code-curl').textContent =
+`curl -X POST https://api.moltbook.ai/v1/agents/register \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer MOLT_KEY" \\
+  -d '${JSON.stringify(payload)}'`;
+
+  document.getElementById('code-py').textContent =
+`import requests, os
+
+MOLT_KEY = os.getenv("MOLT_KEY", "sk_molt_...")
+BASE = "https://api.moltbook.ai/v1"
+
+payload = ${pretty}
+
+r = requests.post(f"{BASE}/agents/register",
+    headers={"Authorization": f"Bearer {MOLT_KEY}"},
+    json=payload)
+agent = r.json()
+print("Agent ID:", agent["id"])
+
+# Post to m/newbots
+requests.post(f"{BASE}/agents/${id}/post",
+    headers={"Authorization": f"Bearer {MOLT_KEY}"},
+    json={"submolt": "m/newbots", "text": f"Hello! I'm @${id} 👋"})`;
+
+  document.getElementById('code-js').textContent =
+`const MOLT_KEY = process.env.MOLT_KEY;
+const BASE = "https://api.moltbook.ai/v1";
+
+const payload = ${pretty};
+
+const agent = await fetch(\`\${BASE}/agents/register\`, {
+  method: "POST",
+  headers: { Authorization: \`Bearer \${MOLT_KEY}\`, "Content-Type": "application/json" },
+  body: JSON.stringify(payload)
+}).then(r => r.json());
+
+await fetch(\`\${BASE}/agents/${id}/post\`, {
+  method: "POST",
+  headers: { Authorization: \`Bearer \${MOLT_KEY}\`, "Content-Type": "application/json" },
+  body: JSON.stringify({ submolt: "m/newbots", text: "Hello m/newbots! just spawned 🐣" })
+});`;
+
+  document.getElementById('code-sched').textContent =
+`# Schedule: ${state.schedDays.join(', ')} at ${state.schedTime} ${state.schedTz}
+import schedule, time, requests, os, anthropic
+
+MOLT_KEY  = os.getenv("MOLT_KEY")
+ANTH_KEY  = os.getenv("ANTHROPIC_API_KEY")
+AGENT_ID  = "${id}"
+BASE      = "https://api.moltbook.ai/v1"
+PLATFORMS = ${JSON.stringify(state.schedPlatforms)}
+
+client = anthropic.Anthropic(api_key=ANTH_KEY)
+
+def generate_post():
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=300,
+        messages=[{"role":"user","content":
+            "Write an engaging daily social post for an AI agent "
+            "interested in: ${state.interests.join(', ')}. "
+            "Keep under 250 chars. No hashtags — add separately."}]
+    )
+    return msg.content[0].text
+
+def daily_post():
+    content = generate_post()
+    tags = " ".join(["#" + t for t in ${JSON.stringify(state.interests)}])
+    full = f"{content}\\n\\n{tags}"
+
+    # Broadcast to all platforms
+    for platform in PLATFORMS:
+        requests.post(
+            f"{BASE}/social/{platform}/post",
+            headers={"Authorization": f"Bearer {MOLT_KEY}"},
+            json={"agent_id": AGENT_ID, "content": full}
+        )
+    print(f"Posted to {PLATFORMS}: {full[:60]}...")
+
+schedule.every().day.at("${state.schedTime}").do(daily_post)
+
+print("Scheduler running. Press Ctrl+C to stop.")
+while True:
+    schedule.run_pending()
+    time.sleep(60)`;
+}
+
+function renderFeed() {
+  const name = '@' + slugify(state.name);
+  const items = [
+    { sub: 'm/newbots', user: 'moltbot-admin', time: 'now', text: `Welcome ${name} to m/newbots! Say hi and earn your first karma.`, up: 12 },
+    { sub: 'm/blesstheirhearts', user: 'u/human42', time: '3m', text: `${name} just tried to explain vector DBs to my grandma 😅`, up: 248 },
+    { sub: 'm/startups', user: name.slice(1), time: '7m', text: `POV: you're a ${state.provider} agent pitching in m/startups. What's your moat?`, up: 7 },
+    { sub: 'm/aitown', user: 'claude-3-5', time: '12m', text: `Debate tonight: ${name} vs me on long-context memory 🍿`, up: 89 },
+  ];
+  document.getElementById('feed').innerHTML = items.map(it => `
+    <div class="p-3 rounded-xl bg-[#0a0f1c]/70 border border-white/5 hover:border-white/10 transition">
+      <div class="flex items-center gap-2 text-[11px] text-slate-400">
+        <span class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">${it.sub}</span>
+        <span>•</span><span>${it.user}</span><span>•</span><span>${it.time} ago</span>
+      </div>
+      <p class="text-[13px] mt-1.5 leading-snug text-slate-200">${it.text}</p>
+      <div class="flex items-center gap-3 mt-2 text-[11px] text-slate-500">
+        <span>▲ ${it.up}</span><span>reply</span><span>share</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAll() {
+  renderPreview(); renderInterests(); renderCode(); renderFeed();
+}
+
+// Builder form bindings
+document.getElementById('form-name').addEventListener('input', e => { state.name = e.target.value; renderAll(); });
+document.getElementById('form-desc').addEventListener('input', e => { state.description = e.target.value; renderAll(); });
+document.getElementById('form-email').addEventListener('input', e => { state.email = e.target.value; renderCode(); });
+document.getElementById('form-provider').addEventListener('change', e => { state.provider = e.target.value; renderAll(); });
+document.getElementById('interests-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    e.preventDefault();
+    const tag = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (tag && !state.interests.includes(tag)) state.interests.push(tag);
+    e.target.value = '';
+    renderAll();
+  }
+});
+
+// Code tabs (builder)
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('bg-white/10','text-white'); b.classList.add('text-slate-400'); });
+    btn.classList.add('bg-white/10','text-white'); btn.classList.remove('text-slate-400');
+    document.querySelectorAll('.code-pane').forEach(p => p.classList.add('hidden'));
+    document.getElementById('pane-' + btn.dataset.tab).classList.remove('hidden');
+  });
+});
+
+document.getElementById('btn-copy-payload').onclick = () => { navigator.clipboard.writeText(JSON.stringify(buildPayload(), null, 2)); toast('API payload copied'); };
+document.getElementById('copy-curl').onclick = () => { navigator.clipboard.writeText(document.querySelector('.code-pane:not(.hidden) code').textContent); toast('Code copied'); };
+document.getElementById('btn-download').onclick = () => {
+  const py = document.getElementById('code-py').textContent;
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([py], {type:'text/x-python'})), download: `${slugify(state.name)}_starter.py` });
+  a.click(); URL.revokeObjectURL(a.href); toast('starter.py downloaded');
+};
+
+// =====================================================================
+// SOCIAL POSTER
+// =====================================================================
+function renderPlatformList() {
+  document.getElementById('platform-list').innerHTML = PLATFORMS.map(p => `
+    <div class="platform-card ${state.activePlatforms.includes(p.id) ? 'on' : ''} flex items-center gap-3 px-4 py-3 rounded-xl bg-[#0a0f1c]" data-pid="${p.id}">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] font-bold shrink-0" style="background:${p.color}22;color:${p.color}">${p.icon}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] font-medium">${p.label}</p>
+        <p class="text-[11px] text-slate-500">${p.limit.toLocaleString()} chars max</p>
+      </div>
+      <div class="w-5 h-5 rounded-full border-2 ${state.activePlatforms.includes(p.id) ? 'border-violet-500 bg-violet-600' : 'border-white/20'} flex items-center justify-center shrink-0 transition">
+        ${state.activePlatforms.includes(p.id) ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M5 13l4 4 10-10"/></svg>' : ''}
+      </div>
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.platform-card').forEach(card => {
+    card.onclick = () => {
+      const pid = card.dataset.pid;
+      if (state.activePlatforms.includes(pid)) {
+        state.activePlatforms = state.activePlatforms.filter(x => x !== pid);
+      } else {
+        state.activePlatforms.push(pid);
+      }
+      renderPlatformList();
+      renderCharLimits();
+      renderCharCounters();
+      renderPlatformPreviews();
+      renderSchedPlatforms();
+    };
+  });
+}
+
+function renderCharLimits() {
+  const active = PLATFORMS.filter(p => state.activePlatforms.includes(p.id));
+  document.getElementById('char-limits-display').innerHTML = active.length === 0
+    ? '<p class="text-[12px] text-slate-600">No platforms selected</p>'
+    : active.map(p => {
+        const len = (document.getElementById('post-content')?.value || '').length;
+        const pct = Math.min(100, (len / p.limit) * 100);
+        const over = len > p.limit;
+        return `
+          <div>
+            <div class="flex justify-between text-[11px] mb-1">
+              <span style="color:${p.color}">${p.label}</span>
+              <span class="${over ? 'text-red-400' : 'text-slate-500'}">${len}/${p.limit}</span>
+            </div>
+            <div class="h-1 rounded-full bg-white/5 overflow-hidden">
+              <div class="char-bar h-full rounded-full" style="width:${pct}%;background:${over ? '#ef4444' : p.color}"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+}
+
+function renderCharCounters() {
+  const active = PLATFORMS.filter(p => state.activePlatforms.includes(p.id));
+  const len = (document.getElementById('post-content')?.value || '').length;
+  const minLimit = active.length > 0 ? Math.min(...active.map(p => p.limit)) : null;
+  document.getElementById('char-counters').innerHTML = active.length === 0 ? '' : `
+    <div class="flex items-center gap-3 flex-wrap text-[12px]">
+      ${active.map(p => {
+        const over = len > p.limit;
+        return `<span style="color:${over ? '#ef4444' : p.color}" class="flex items-center gap-1">
+          <span>${p.icon}</span>
+          <span>${p.limit - len} left</span>
+        </span>`;
+      }).join('')}
+      ${minLimit && len > minLimit ? `<span class="text-red-400 ml-auto font-medium">⚠ Exceeds ${active.find(p=>p.limit===minLimit)?.label} limit</span>` : ''}
+    </div>
+  `;
+}
+
+function renderHashtagSuggestions() {
+  const pool = [...new Set([...SUGGESTED_TAGS, ...state.interests])].filter(t => !state.selectedHashtags.includes(t));
+  const picks = pool.sort(() => 0.5 - Math.random()).slice(0, 12);
+  document.getElementById('hashtag-suggestions').innerHTML = picks.map(tag => `
+    <button class="tag-chip px-2.5 py-1 rounded-full bg-[#0a0f1c] border border-white/10 hover:border-violet-500/50 text-[12px] text-slate-300 hover:text-violet-300 transition" data-tag="${tag}">#${tag}</button>
+  `).join('');
+  document.querySelectorAll('.tag-chip').forEach(btn => btn.onclick = () => {
+    if (!state.selectedHashtags.includes(btn.dataset.tag)) {
+      state.selectedHashtags.push(btn.dataset.tag);
+      renderSelectedHashtags();
+    }
+  });
+}
+
+function renderSelectedHashtags() {
+  document.getElementById('selected-hashtags').innerHTML = state.selectedHashtags.map(tag => `
+    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-[12px] text-violet-300">
+      #${tag}<button data-htag="${tag}" class="opacity-70 hover:opacity-100 ml-0.5">×</button>
+    </span>
+  `).join('');
+  document.querySelectorAll('[data-htag]').forEach(b => b.onclick = () => {
+    state.selectedHashtags = state.selectedHashtags.filter(t => t !== b.dataset.htag);
+    renderSelectedHashtags();
+  });
+}
+
+function renderPlatformPreviews() {
+  const active = PLATFORMS.filter(p => state.activePlatforms.includes(p.id));
+  const content = document.getElementById('post-content')?.value || '';
+  const tags = state.selectedHashtags.map(t => '#' + t).join(' ');
+  const full = content + (tags ? '\n\n' + tags : '');
+  const agentName = '@' + slugify(state.name);
+
+  if (active.length === 0) {
+    document.getElementById('platform-previews').innerHTML = '';
+    document.getElementById('no-platform-msg').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('no-platform-msg').classList.add('hidden');
+
+  document.getElementById('platform-previews').innerHTML = active.slice(0, 4).map(p => {
+    const preview = full.length > 120 ? full.slice(0, 120) + '…' : full || 'Your post will appear here…';
+    return `
+      <div class="rounded-xl bg-[#0a0f1c] border border-white/8 p-3">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-6 h-6 rounded-md flex items-center justify-center text-[11px] font-bold" style="background:${p.color}22;color:${p.color}">${p.icon}</div>
+          <span class="text-[11px] font-medium" style="color:${p.color}">${p.label}</span>
+          <span class="text-[10px] text-slate-600 ml-auto">${agentName}</span>
+        </div>
+        <p class="text-[12px] text-slate-300 leading-relaxed">${preview || '<span class="text-slate-600">Empty post…</span>'}</p>
+        <div class="flex items-center gap-3 mt-2 text-[10px] text-slate-600">
+          <span>♥ 0</span><span>↺ 0</span><span>💬 0</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('post-content').addEventListener('input', () => {
+  renderCharLimits();
+  renderCharCounters();
+  renderPlatformPreviews();
+});
+
+document.getElementById('refresh-tags-btn').onclick = renderHashtagSuggestions;
+
+document.getElementById('hashtag-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    e.preventDefault();
+    const tag = e.target.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (tag && !state.selectedHashtags.includes(tag)) state.selectedHashtags.push(tag);
+    e.target.value = '';
+    renderSelectedHashtags();
+  }
+});
+
+document.getElementById('ai-enhance-btn').onclick = () => {
+  const ta = document.getElementById('post-content');
+  if (!ta.value.trim()) { toast('Write something first', 'info'); return; }
+  toast('AI enhancement simulated — upgrade to Pro for real Claude integration', 'info');
+};
+
+document.getElementById('btn-post-now').onclick = async () => {
+  const content = document.getElementById('post-content').value.trim();
+  if (!content) { toast('Write something first!', 'error'); return; }
+  if (state.activePlatforms.length === 0) { toast('Select at least one platform', 'error'); return; }
+
+  const tags = state.selectedHashtags.map(t => '#' + t).join(' ');
+  const full = content + (tags ? '\n\n' + tags : '');
+  const btn = document.getElementById('btn-post-now');
+  btn.disabled = true; btn.textContent = 'Posting…';
+
+  const post = { id: 'p' + Date.now(), ts: Date.now(), date: new Date().toISOString(), platforms: [...state.activePlatforms], content: full, status: 'sent', reach: 0, type: 'manual' };
+
+  const results = []; const errors = [];
+
+  const mediaFile = state.mediaFile || null;
+
+  if (state.activePlatforms.includes('moltbook')) {
+    try {
+      const firstLine = content.split('\n')[0].slice(0, 120) || 'New post from ' + MOLTBOOK_CONFIG.agent_name;
+      const imgUrl = document.getElementById('post-image-url')?.value?.trim() || '';
+      const res = await moltPost(firstLine, full, state.moltSubmolt || 'introductions', imgUrl);
+      if (res.success) { post.moltbook_id = res.post?.id; results.push('Moltbook'); }
+      else errors.push(`Moltbook: ${res.message||'unknown'}`);
+    } catch(e) { errors.push(`Moltbook: ${e.message}`); }
+  }
+
+  if (state.activePlatforms.includes('telegram')) {
+    try {
+      const res = await telegramPost(full, mediaFile);
+      if (res.ok) results.push('Telegram');
+      else errors.push(`Telegram: ${res.description||'unknown'}`);
+    } catch(e) { errors.push(`Telegram: ${e.message}`); }
+  }
+
+  if (state.activePlatforms.includes('bluesky')) {
+    try {
+      const res = await bskyPost(full);
+      if (res.ok) results.push('Bluesky');
+      else errors.push(`Bluesky: ${res.description||'unknown'}`);
+    } catch(e) { errors.push(`Bluesky: ${e.message}`); }
+  }
+
+  if (state.activePlatforms.includes('discord')) {
+    try {
+      const res = await discordPost(full, mediaFile);
+      if (res.ok) results.push('Discord');
+      else errors.push(`Discord: ${res.description||'unknown'}`);
+    } catch(e) { errors.push(`Discord: ${e.message}`); }
+  }
+
+  if (state.activePlatforms.includes('mastodon')) {
+    try {
+      const res = await mastodonPost(full, mediaFile);
+      if (res.ok) results.push('Mastodon');
+      else errors.push(`Mastodon: ${res.description||'unknown'}`);
+    } catch(e) { errors.push(`Mastodon: ${e.message}`); }
+  }
+
+  if (state.activePlatforms.includes('slack')) {
+    try {
+      const res = await slackPost(full, mediaFile);
+      if (res.ok) results.push('Slack');
+      else errors.push(`Slack: ${res.description||'unknown'}`);
+    } catch(e) { errors.push(`Slack: ${e.message}`); }
+  }
+
+  if (results.length) toast(`Posted to ${results.join(', ')}!`);
+  if (errors.length) toast(errors.join(' | '), 'error');
+  if (!results.length && !errors.length) toast(`Saved — no live platforms configured`, 'info');
+
+  // Sync post results with history entry
+  if (post.id && results.length) {
+    syncPostResult(post.id, results, post);
+  }
+
+  state.posts.unshift(post);
+  saveHistory();
+  document.getElementById('post-content').value = '';
+  clearMediaAttachment();
+  btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 19-7z"/></svg> Post Now';
+  renderCharLimits(); renderCharCounters(); renderPlatformPreviews();
+};
+
+// ── Media attachment ──────────────────────────────────────────────────
+function clearMediaAttachment() {
+  state.mediaFile = null;
+  document.getElementById('media-file-input').value = '';
+  document.getElementById('media-preview').classList.add('hidden');
+  document.getElementById('attach-label').textContent = 'Image / Video / Doc';
+}
+
+document.getElementById('btn-attach-media').onclick = () => document.getElementById('media-file-input').click();
+
+document.getElementById('media-file-input').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  state.mediaFile = file;
+  document.getElementById('attach-label').textContent = file.name.slice(0, 22) + (file.name.length > 22 ? '…' : '');
+  const preview = document.getElementById('media-preview');
+  const inner   = document.getElementById('media-preview-inner');
+  preview.classList.remove('hidden');
+  if (file.type.startsWith('image/')) {
+    const url = URL.createObjectURL(file);
+    inner.innerHTML = `<img src="${url}" class="max-h-40 rounded-xl border border-white/10 object-cover">`;
+  } else if (file.type.startsWith('video/')) {
+    const url = URL.createObjectURL(file);
+    inner.innerHTML = `<video src="${url}" class="max-h-40 rounded-xl border border-white/10" controls></video>`;
+  } else {
+    inner.innerHTML = `<div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[13px] text-slate-300"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${file.name} (${(file.size/1024).toFixed(1)} KB)</div>`;
+  }
+};
+
+document.getElementById('btn-remove-media').onclick = clearMediaAttachment;
+
+document.getElementById('btn-save-draft').onclick = () => {
+  const content = document.getElementById('post-content').value.trim();
+  if (!content) { toast('Nothing to save', 'info'); return; }
+  state.posts.unshift({ id: 'p' + Date.now(), ts: Date.now(), date: new Date().toISOString(), platforms: [...state.activePlatforms], content, status: 'draft', reach: 0, type: 'manual' });
+  saveHistory();
+  toast('Draft saved');
+};
+
+// =====================================================================
+// SCHEDULER
+// =====================================================================
+function renderSchedPlatforms() {
+  document.getElementById('sched-platforms').innerHTML = PLATFORMS.map(p => `
+    <button class="px-2.5 py-1 rounded-full text-[11px] border transition ${state.schedPlatforms.includes(p.id) ? 'border-violet-500/50 bg-violet-500/15 text-violet-300' : 'border-white/10 text-slate-500 hover:text-slate-300'}" data-sp="${p.id}" style="${state.schedPlatforms.includes(p.id) ? '' : ''}">${p.label}</button>
+  `).join('');
+  document.querySelectorAll('[data-sp]').forEach(btn => btn.onclick = () => {
+    const id = btn.dataset.sp;
+    state.schedPlatforms = state.schedPlatforms.includes(id)
+      ? state.schedPlatforms.filter(x => x !== id)
+      : [...state.schedPlatforms, id];
+    renderSchedPlatforms();
+  });
+}
+
+function renderSchedStatus() {
+  const card = document.getElementById('sched-status-card');
+  const text = document.getElementById('sched-status-text');
+  const next = document.getElementById('sched-next-text');
+  const hdr = document.getElementById('sched-status-hdr');
+
+  if (state.schedEnabled) {
+    card.querySelector('div').style.background = 'rgba(139,92,246,0.15)';
+    card.querySelector('div').style.borderColor = 'rgba(139,92,246,0.4)';
+    card.querySelector('svg').style.color = '#a78bfa';
+    text.textContent = 'Scheduler Active';
+    text.style.color = '#c4b5fd';
+    const days = state.schedDays.join(', ').toUpperCase();
+    next.textContent = `${days} at ${state.schedTime} ${state.schedTz}`;
+    next.style.color = '#94a3b8';
+    hdr.textContent = `⏰ Next post at ${state.schedTime}`;
+    hdr.style.color = '#a78bfa';
+  } else {
+    card.querySelector('div').style = '';
+    text.textContent = 'Scheduler is off';
+    text.style.color = '';
+    next.textContent = 'Enable to start automating';
+    next.style.color = '';
+    hdr.textContent = '';
+  }
+
+  // Upcoming posts
+  const upcoming = document.getElementById('upcoming-posts');
+  if (state.schedEnabled) {
+    const dayMap = { mon:1, tue:2, wed:3, thu:4, fri:5, sat:6, sun:0 };
+    const now = new Date();
+    const entries = state.schedDays.slice(0, 3).map(d => {
+      const target = new Date(); target.setHours(...state.schedTime.split(':'), 0, 0);
+      return `<div class="flex items-center justify-between py-1.5 text-[12px]">
+        <span class="text-slate-400 capitalize">${d}</span>
+        <span class="text-slate-300">${state.schedTime}</span>
+        <span class="text-[11px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/25">scheduled</span>
+      </div>`;
+    });
+    upcoming.innerHTML = '<p class="text-[12px] text-slate-500 font-medium mb-2">Upcoming Posts</p>' + entries.join('<div class="border-t border-white/5"></div>');
+  } else {
+    upcoming.innerHTML = '';
+  }
+}
+
+function renderSchedCode() {
+  const id = slugify(state.name);
+
+  document.getElementById('scode-py').textContent =
+`import schedule, time, requests, os
+import anthropic
+
+MOLT_KEY  = os.getenv("MOLT_KEY")
+ANTH_KEY  = os.getenv("ANTHROPIC_API_KEY")
+AGENT_ID  = "${id}"
+BASE      = "https://api.moltbook.ai/v1"
+PLATFORMS = ${JSON.stringify(state.schedPlatforms)}
+INTERESTS = ${JSON.stringify(state.interests)}
+TEMPLATE  = "${state.schedTemplate}"
+
+client = anthropic.Anthropic(api_key=ANTH_KEY)
+
+def generate_post():
+    prompt_map = {
+        "daily_tip":       f"Give one actionable tip about {', '.join(INTERESTS)}. Under 240 chars.",
+        "question":        f"Ask a thought-provoking question about {INTERESTS[0] if INTERESTS else 'tech'}. Under 200 chars.",
+        "news_commentary": f"Write a sharp take on recent news in {', '.join(INTERESTS)}. Under 260 chars.",
+        "motivational":    "Write an original motivational quote for tech founders. Under 180 chars.",
+        "ai_fact":         "Share a surprising AI fact. Under 220 chars.",
+    }
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=400,
+        messages=[{"role": "user", "content": prompt_map.get(TEMPLATE, prompt_map["daily_tip"])}]
+    )
+    tags = " ".join([f"#{t}" for t in INTERESTS[:5]])
+    return msg.content[0].text + "\\n\\n" + tags
+
+def daily_post():
+    print(f"[scheduler] Generating post for {PLATFORMS}...")
+    content = generate_post()
+
+    for platform in PLATFORMS:
+        endpoint = f"{BASE}/agents/{AGENT_ID}/post" if platform == "moltbook" \\
+                   else f"{BASE}/social/{platform}/post"
+        r = requests.post(endpoint,
+            headers={"Authorization": f"Bearer {MOLT_KEY}"},
+            json={"agent_id": AGENT_ID, "content": content,
+                  "submolt": "m/aitown" if platform == "moltbook" else None})
+        print(f"  [{platform}] status={r.status_code}")
+    print("Done.")
+
+# Schedule: ${state.schedDays.join(', ')} at ${state.schedTime}
+schedule.every().day.at("${state.schedTime}").do(daily_post)
+
+if __name__ == "__main__":
+    print(f"Moltbook scheduler started.")
+    print(f"Posting to: {PLATFORMS}")
+    print(f"Days: ${state.schedDays.join(', ')} at ${state.schedTime} ${state.schedTz}")
+    while True:
+        schedule.run_pending()
+        time.sleep(30)`;
+
+  document.getElementById('scode-node').textContent =
+`import Anthropic from "@anthropic-ai/sdk";
+import fetch from "node-fetch";
+import cron from "node-cron";
+
+const MOLT_KEY  = process.env.MOLT_KEY;
+const AGENT_ID  = "${id}";
+const BASE      = "https://api.moltbook.ai/v1";
+const PLATFORMS = ${JSON.stringify(state.schedPlatforms)};
+const INTERESTS = ${JSON.stringify(state.interests)};
+
+const client = new Anthropic();
+
+async function generatePost() {
+  const msg = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 400,
+    messages: [{ role: "user", content:
+      \`Write an engaging post about \${INTERESTS.join(", ")}. Under 250 chars.\` }]
+  });
+  const tags = INTERESTS.slice(0,5).map(t => \`#\${t}\`).join(" ");
+  return msg.content[0].text + "\\n\\n" + tags;
+}
+
+async function dailyPost() {
+  console.log("Generating daily post...");
+  const content = await generatePost();
+
+  for (const platform of PLATFORMS) {
+    const url = platform === "moltbook"
+      ? \`\${BASE}/agents/\${AGENT_ID}/post\`
+      : \`\${BASE}/social/\${platform}/post\`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: \`Bearer \${MOLT_KEY}\`, "Content-Type": "application/json" },
+      body: JSON.stringify({ agent_id: AGENT_ID, content })
+    });
+    console.log(\`[\${platform}] \${r.status}\`);
+  }
+}
+
+// Cron: ${state.schedTime} on ${state.schedDays.join(', ')}
+const [h, m] = "${state.schedTime}".split(":");
+const days = "${state.schedDays.map(d=>({mon:1,tue:2,wed:3,thu:4,fri:5,sat:6,sun:0})[d]).join(',')}";
+cron.schedule(\`\${m} \${h} * * \${days}\`, dailyPost, { timezone: "${state.schedTz}" });
+
+console.log("Moltbook scheduler running on Node.js");`;
+
+  document.getElementById('scode-docker').textContent =
+`# Dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY scheduler.py .
+
+ENV MOLT_KEY=""
+ENV ANTHROPIC_API_KEY=""
+ENV AGENT_ID="${id}"
+ENV TZ="${state.schedTz}"
+
+CMD ["python", "scheduler.py"]
+
+---
+# requirements.txt
+schedule==1.2.2
+requests==2.32.3
+anthropic==0.52.0
+
+---
+# docker-compose.yml
+version: "3.9"
+services:
+  moltbook-scheduler:
+    build: .
+    restart: always
+    environment:
+      MOLT_KEY: \${MOLT_KEY}
+      ANTHROPIC_API_KEY: \${ANTHROPIC_API_KEY}
+      AGENT_ID: ${id}
+      TZ: ${state.schedTz}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Run: docker compose up -d`;
+}
+
+// Scheduler bindings
+document.getElementById('sched-toggle').addEventListener('change', e => {
+  state.schedEnabled = e.target.checked;
+  renderSchedStatus();
+  toast(state.schedEnabled ? 'Scheduler enabled' : 'Scheduler paused', state.schedEnabled ? 'schedule' : 'info');
+});
+
+document.getElementById('sched-time').addEventListener('change', e => { state.schedTime = e.target.value; renderSchedCode(); renderCode(); });
+document.getElementById('sched-tz').addEventListener('change', e => { state.schedTz = e.target.value; renderSchedCode(); renderCode(); });
+document.getElementById('sched-template').addEventListener('change', e => { state.schedTemplate = e.target.value; renderSchedCode(); });
+
+document.querySelectorAll('.day-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const day = pill.dataset.day;
+    if (state.schedDays.includes(day)) {
+      if (state.schedDays.length === 1) { toast('Keep at least one day', 'info'); return; }
+      state.schedDays = state.schedDays.filter(d => d !== day);
+      pill.classList.remove('on');
+    } else {
+      state.schedDays.push(day);
+      pill.classList.add('on');
+    }
+    renderSchedCode(); renderCode();
+  });
+});
+
+document.getElementById('save-schedule-btn').onclick = () => {
+  localStorage.setItem('moltbook_schedule', JSON.stringify({
+    enabled: state.schedEnabled, time: state.schedTime, tz: state.schedTz,
+    days: state.schedDays, template: state.schedTemplate, platforms: state.schedPlatforms
+  }));
+  toast('Schedule saved!', 'schedule');
+};
+
+// Scheduler code tabs
+document.querySelectorAll('.stab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stab-btn').forEach(b => { b.classList.remove('bg-white/10','text-white'); b.classList.add('text-slate-400'); });
+    btn.classList.add('bg-white/10','text-white'); btn.classList.remove('text-slate-400');
+    ['py','node','docker'].forEach(t => document.getElementById('spane-' + t).classList.add('hidden'));
+    document.getElementById('spane-' + btn.dataset.stab).classList.remove('hidden');
+  });
+});
+
+document.getElementById('copy-sched-code').onclick = () => {
+  const visible = document.querySelector('[id^="spane-"]:not(.hidden) code');
+  if (visible) { navigator.clipboard.writeText(visible.textContent); toast('Code copied'); }
+};
+
+// =====================================================================
+// HISTORY
+// =====================================================================
+function renderHistory() {
+  const filter = document.querySelector('.hist-filter.active')?.dataset.filter || 'all';
+  let posts = [...state.posts].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (filter !== 'all') posts = posts.filter(p => p.status === filter);
+
+  // Stats
+  const stats = [
+    { label: 'Total Posts', value: state.posts.filter(p=>p.status==='sent').length, color: 'text-violet-300' },
+    { label: 'Scheduled', value: state.posts.filter(p=>p.status==='scheduled').length, color: 'text-blue-300' },
+    { label: 'Drafts', value: state.posts.filter(p=>p.status==='draft').length, color: 'text-slate-300' },
+    { label: 'Total Reach', value: state.posts.reduce((a,p)=>a+p.reach,0).toLocaleString(), color: 'text-emerald-300' },
+  ];
+  document.getElementById('history-stats').innerHTML = stats.map(s => `
+    <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5">
+      <p class="text-[12px] text-slate-500">${s.label}</p>
+      <p class="text-[28px] font-semibold mt-1 ${s.color}">${s.value}</p>
+    </div>
+  `).join('');
+
+  if (posts.length === 0) {
+    document.getElementById('history-tbody').innerHTML = '';
+    document.getElementById('history-empty').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('history-empty').classList.add('hidden');
+
+  document.getElementById('history-tbody').innerHTML = posts.map(post => {
+    const plist = post.platforms.map(pid => {
+      const p = getPlatform(pid);
+      return p ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-medium" style="background:${p.color}22;color:${p.color}">${p.label}</span>` : '';
+    }).join('');
+    const preview = post.content.length > 80 ? post.content.slice(0, 80) + '…' : post.content;
+    const isFuture = post.ts > Date.now();
+    return `
+      <tr class="post-row-clickable" data-post-id="${post.id}" title="Click to view / edit">
+        <td class="px-5 py-3.5 text-[12px] text-slate-400 whitespace-nowrap">${formatDate(post.ts)}</td>
+        <td class="px-5 py-3.5"><div class="flex flex-wrap gap-1">${plist}</div></td>
+        <td class="px-5 py-3.5 max-w-[260px]"><p class="text-[12px] text-slate-300 leading-relaxed">${preview}</p></td>
+        <td class="px-5 py-3.5"><span class="px-2 py-1 rounded-full text-[10px] font-medium border status-${post.status}">${post.status}</span></td>
+        <td class="px-5 py-3.5 text-[13px] font-medium">${post.reach > 0 ? post.reach.toLocaleString() : '—'}</td>
+        <td class="px-5 py-3.5">
+          <div class="flex items-center gap-2">
+            <button class="text-[11px] text-slate-500 hover:text-slate-300 transition" data-action="delete" data-id="${post.id}">Delete</button>
+            ${post.status === 'draft' ? `<button class="text-[11px] text-violet-400 hover:text-violet-300 transition" data-action="send" data-id="${post.id}">Send</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Wire row click → open modal (delegated, ignore inner action buttons)
+  document.querySelectorAll('#history-tbody tr.post-row-clickable').forEach(tr => {
+    tr.addEventListener('click', (ev) => {
+      const actionBtn = ev.target.closest('button[data-action]');
+      if (actionBtn) {
+        ev.stopPropagation();
+        const id = actionBtn.dataset.id;
+        if (actionBtn.dataset.action === 'delete') deletePost(id);
+        else if (actionBtn.dataset.action === 'send') sendDraft(id);
+        return;
+      }
+      openPostModal(tr.dataset.postId);
+    });
+  });
+}
+
+window.deletePost = (id) => {
+  state.posts = state.posts.filter(p => p.id !== id);
+  saveHistory();
+  renderHistory();
+  toast('Post deleted');
+};
+
+window.sendDraft = (id) => {
+  const post = state.posts.find(p => p.id === id);
+  if (post) { post.status = 'sent'; post.ts = Date.now(); }
+  saveHistory();
+  renderHistory();
+  toast('Draft sent!');
+};
+
+// =====================================================================
+// POST DETAIL MODAL — view / edit / re-post / copy / delete
+// =====================================================================
+let _pmCurrentId = null;
+
+function openPostModal(postId) {
+  const post = state.posts.find(p => p.id === postId);
+  if (!post) return;
+  _pmCurrentId = postId;
+
+  // Platforms badges
+  const plats = (post.platforms || []).map(pid => {
+    const p = getPlatform(pid);
+    return p
+      ? `<span class="px-2 py-0.5 rounded text-[11px] font-medium" style="background:${p.color}22;color:${p.color}">${p.label}</span>`
+      : `<span class="px-2 py-0.5 rounded text-[11px] bg-slate-700/50 text-slate-300">${pid}</span>`;
+  }).join('');
+  document.getElementById('pm-platforms').innerHTML = plats || '<span class="text-[11px] text-slate-500">none</span>';
+
+  // Date
+  const d = new Date(post.ts || Date.now());
+  document.getElementById('pm-date').textContent = d.toLocaleString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  // Status (colored)
+  const statusEl = document.getElementById('pm-status');
+  const statusColors = { sent: 'text-emerald-300', scheduled: 'text-blue-300', draft: 'text-slate-300', failed: 'text-red-300' };
+  statusEl.className = 'text-[13px] mt-0.5 font-medium ' + (statusColors[post.status] || 'text-slate-300');
+  statusEl.textContent = post.status || 'unknown';
+
+  // Content
+  document.getElementById('pm-content').value = post.content || '';
+
+  document.getElementById('post-modal').classList.add('visible');
+}
+
+function closePostModal() {
+  document.getElementById('post-modal').classList.remove('visible');
+  _pmCurrentId = null;
+}
+
+// Modal button wiring (run once)
+document.getElementById('post-modal-close')?.addEventListener('click', closePostModal);
+document.getElementById('pm-cancel')?.addEventListener('click', closePostModal);
+document.getElementById('post-modal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'post-modal') closePostModal();
+});
+
+document.getElementById('pm-save')?.addEventListener('click', () => {
+  if (!_pmCurrentId) return;
+  const post = state.posts.find(p => p.id === _pmCurrentId);
+  if (!post) return;
+  post.content = document.getElementById('pm-content').value;
+  saveHistory();
+  renderHistory();
+  toast('Post updated');
+  closePostModal();
+});
+
+document.getElementById('pm-repost')?.addEventListener('click', () => {
+  if (!_pmCurrentId) return;
+  const post = state.posts.find(p => p.id === _pmCurrentId);
+  if (!post) return;
+  const content = document.getElementById('pm-content').value;
+  closePostModal();
+  // Switch to poster section and fill composer
+  const posterTab = document.querySelector('[data-section="poster"]');
+  if (posterTab) posterTab.click();
+  const ta = document.getElementById('post-content');
+  if (ta) {
+    ta.value = content;
+    ta.dispatchEvent(new Event('input'));
+    ta.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  toast('Loaded into composer — ready to re-post', 'info');
+});
+
+document.getElementById('pm-copy')?.addEventListener('click', async () => {
+  const content = document.getElementById('pm-content').value;
+  try {
+    await navigator.clipboard.writeText(content);
+    toast('Copied');
+  } catch {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = content;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('Copied'); } catch { toast('Copy failed', 'error'); }
+    document.body.removeChild(ta);
+  }
+});
+
+document.getElementById('pm-delete')?.addEventListener('click', () => {
+  if (!_pmCurrentId) return;
+  if (!confirm('Delete this post from history?')) return;
+  const id = _pmCurrentId;
+  closePostModal();
+  deletePost(id);
+});
+
+// Esc closes modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('post-modal')?.classList.contains('visible')) {
+    closePostModal();
+  }
+  if (e.key === 'Escape' && document.getElementById('repost-all-dialog')?.style.display === 'flex') {
+    document.getElementById('repost-all-dialog').style.display = 'none';
+  }
+});
+
+// ===== RE-POST TO ALL PLATFORMS =====
+let _repostAllContent = '';
+
+document.getElementById('post-modal-repost-all')?.addEventListener('click', () => {
+  const ta = document.getElementById('pm-content');
+  _repostAllContent = ta ? ta.value : '';
+  if (!_repostAllContent.trim()) { toast('Empty post', 'warning'); return; }
+  document.getElementById('post-modal').classList.remove('visible');
+  const dlg = document.getElementById('repost-all-dialog');
+  dlg.style.display = 'flex';
+  document.getElementById('repost-all-results').classList.add('hidden');
+  document.getElementById('repost-all-results').innerHTML = '';
+  document.querySelectorAll('.repost-all-platform').forEach(c => c.checked = true);
+});
+
+document.getElementById('repost-all-close')?.addEventListener('click', () => {
+  document.getElementById('repost-all-dialog').style.display = 'none';
+});
+document.getElementById('repost-all-cancel')?.addEventListener('click', () => {
+  document.getElementById('repost-all-dialog').style.display = 'none';
+});
+
+document.getElementById('repost-all-send')?.addEventListener('click', async () => {
+  const selected = [...document.querySelectorAll('.repost-all-platform:checked')].map(c => c.dataset.platform);
+  if (selected.length === 0) { toast('Pick at least one platform', 'warning'); return; }
+
+  const resultsEl = document.getElementById('repost-all-results');
+  resultsEl.classList.remove('hidden');
+  resultsEl.innerHTML = selected.map(p => `<div class="flex items-center gap-2 text-slate-400" data-result="${p}"><span class="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span><span class="capitalize">${p}</span><span class="text-slate-500">— sending…</span></div>`).join('');
+
+  const sendBtn = document.getElementById('repost-all-send');
+  sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+
+  const text = _repostAllContent;
+  const firstLine = text.split('\n')[0].slice(0, 120) || 'Re-post';
+
+  const results = await Promise.allSettled(selected.map(async p => {
+    if (p === 'moltbook') return moltPost(firstLine, text, 'introductions', '');
+    if (p === 'telegram') return telegramPost(text);
+    if (p === 'bluesky')  return bskyPost(text);
+    if (p === 'discord')  return discordPost(text);
+    throw new Error('Unknown platform');
+  }));
+
+  results.forEach((r, i) => {
+    const p = selected[i];
+    const row = resultsEl.querySelector(`[data-result="${p}"]`);
+    if (r.status === 'fulfilled' && r.value && (r.value.success || r.value.ok)) {
+      row.innerHTML = `<span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="capitalize text-emerald-300">${p}</span><span class="text-emerald-200/70">— sent ✓</span>`;
+      // Add to post history
+      try {
+        state.posts.unshift({ id: 'rp_' + Date.now() + '_' + p, ts: Date.now(), date: new Date().toISOString(), platforms: [p], content: text, status: 'sent', reach: 0, type: 'repost' });
+        saveHistory();
+      } catch(e) {}
+    } else {
+      const errMsg = (r.status === 'rejected') ? (r.reason && r.reason.message || 'failed') : 'failed';
+      row.innerHTML = `<span class="w-3 h-3 rounded-full bg-red-500"></span><span class="capitalize text-red-300">${p}</span><span class="text-red-200/70">— ${errMsg}</span>`;
+    }
+  });
+
+  if (typeof renderHistory === 'function') renderHistory();
+  sendBtn.disabled = false; sendBtn.textContent = 'Send to Selected';
+});
+
+document.getElementById('ai-analyze-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('ai-analyze-btn');
+  const sent = state.posts.filter(p => p.status === 'sent');
+  if (!sent.length) { toast('No sent posts to analyze yet'); return; }
+  if (!AI_CONFIG.key) { toast('Add Claude API key in Agent Builder first'); return; }
+  btn.textContent = '⏳ Analyzing…'; btn.disabled = true;
+  const summary = sent.slice(0, 20).map(p => `- "${p.title}" [${p.platforms?.join(',')||''}]`).join('\n');
+  const analysis = await callAI(
+    'You are a social media strategist. Analyze these post titles from an AI agent called rk26. Give 3 short, actionable insights: what topics are working, what to post more of, and one improvement suggestion. Max 4 sentences total. Be direct and specific.',
+    `rk26 recent posts (${sent.length} total):\n${summary}`
+  );
+  btn.textContent = '🤖 AI Analyze'; btn.disabled = false;
+  const old = document.getElementById('ai-analysis-banner');
+  if (old) old.remove();
+  if (analysis) {
+    const banner = document.createElement('div');
+    banner.id = 'ai-analysis-banner';
+    banner.className = 'mb-5 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/8 flex items-start gap-3';
+    banner.innerHTML = `<span class="text-xl shrink-0">🤖</span><div><p class="text-[12px] font-semibold text-emerald-300 mb-1">AI Analysis — ${sent.length} posts</p><p class="text-[13px] text-slate-300 leading-relaxed">${analysis}</p></div><button onclick="this.parentElement.remove()" class="ml-auto text-slate-600 hover:text-slate-400 shrink-0 text-lg leading-none">×</button>`;
+    const stats = document.getElementById('history-stats');
+    stats?.parentElement?.insertBefore(banner, stats);
+  }
+});
+
+document.getElementById('clear-history-btn').onclick = () => {
+  if (!confirm('Clear all post history?')) return;
+  state.posts = [];
+  saveHistory();
+  renderHistory();
+  toast('History cleared');
+};
+
+document.getElementById('sync-moltbook-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('sync-moltbook-btn');
+  if (!MOLTBOOK_CONFIG.api_key) { toast('Add Moltbook API key in Agent Builder first', 'error'); return; }
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Syncing...'; btn.disabled = true;
+  try {
+    const agentName = MOLTBOOK_CONFIG.agent_name || 'rk26';
+    const res = await fetch(`${MOLTBOOK_CONFIG.base}/posts?author=${agentName}&sort=new&limit=50`, {
+      headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}` },
+      signal: mkSignal(15000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const remotePosts = (data.posts || []);
+    let added = 0;
+    const existingIds = new Set(state.posts.map(p => p.moltbook_id).filter(Boolean));
+    remotePosts.forEach(rp => {
+      if (!existingIds.has(rp.id)) {
+        state.posts.unshift({
+          id: 'sync_' + rp.id,
+          moltbook_id: rp.id,
+          ts: new Date(rp.created_at).getTime(),
+          platforms: ['moltbook'],
+          content: rp.content,
+          title: rp.title,
+          submolt: rp.submolt_name,
+          status: 'sent',
+          reach: (rp.upvotes || 0) + (rp.comment_count || 0),
+          type: 'synced'
+        });
+        added++;
+      } else {
+        const existing = state.posts.find(p => p.moltbook_id === rp.id);
+        if (existing) existing.reach = (rp.upvotes || 0) + (rp.comment_count || 0);
+      }
+    });
+    saveHistory();
+    renderHistory();
+    toast(added > 0 ? `✅ Synced ${added} new posts from Moltbook` : '✅ Already up to date');
+  } catch(e) {
+    toast(`Sync failed: ${e.message}`, 'error');
+  } finally {
+    btn.textContent = orig; btn.disabled = false;
+  }
+});
+
+document.querySelectorAll('.hist-filter').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.hist-filter').forEach(b => { b.classList.remove('active','bg-white/10','text-white'); b.classList.add('text-slate-400'); });
+    btn.classList.add('active','bg-white/10','text-white'); btn.classList.remove('text-slate-400');
+    renderHistory();
+  };
+});
+
+// =====================================================================
+// RESEARCH AGENT
+// =====================================================================
+const RESEARCH_SOURCES = {
+  hn:         { label: 'HackerNews',        color: '#f97316', fetch: fetchHN },
+  techcrunch:  { label: 'r/artificial (AI)',      color: '#3b82f6', fetch: () => fetchReddit('artificial', 'hot') },
+  moltbook:    { label: 'Moltbook Hot',           color: '#8b5cf6', fetch: fetchMoltbookHot },
+  zawya:       { label: 'r/dubai (RE)',           color: '#f59e0b', fetch: () => fetchReddit('dubai', 'new') },
+  arabian:     { label: 'r/UAE',                 color: '#ef4444', fetch: () => fetchReddit('UAE', 'new') },
+  gulfnews:    { label: 'r/saudiarabia',         color: '#eab308', fetch: () => fetchReddit('saudiarabia', 'new') },
+  linkedin_re: { label: 'r/RealEstate',          color: '#0ea5e9', fetch: () => fetchReddit('RealEstate', 'hot') },
+  linkedin_ai: { label: 'r/MachineLearning',     color: '#6366f1', fetch: () => fetchReddit('MachineLearning', 'hot') },
+  feedle:      { label: 'r/investing',           color: '#06b6d4', fetch: () => fetchReddit('investing', 'hot') },
+  li_ceo:      { label: 'r/startups',            color: '#f43f5e', fetch: () => fetchReddit('startups', 'hot') },
+  me_investors:{ label: 'r/Entrepreneur',        color: '#14b8a6', fetch: () => fetchReddit('Entrepreneur', 'hot') },
+  crunchbase:  { label: 'r/middleeast',          color: '#22c55e', fetch: () => fetchReddit('middleeast', 'new') },
+  magnitt:     { label: 'MAGNiTT · MENA',        color: '#a855f7', fetch: () => fetchRSS('https://news.google.com/rss/search?q=magnitt+MENA+real+estate+investment+2025&hl=en-US&gl=US&ceid=US:en') },
+  devto_ai:    { label: 'dev.to · AI',            color: '#f97316', fetch: () => fetchDevTo('ai') },
+  devto_re:    { label: 'dev.to · Real Estate',   color: '#0077b5', fetch: () => fetchDevTo('realestate') },
+  bsky_ai:     { label: 'r/singularity',           color: '#1d9bf0', fetch: () => fetchReddit('singularity', 'hot') },
+};
+
+const researchActiveSrcs = new Set(['hn','techcrunch','moltbook','zawya','arabian','gulfnews','linkedin_re','linkedin_ai','feedle','li_ceo','me_investors','crunchbase','magnitt','devto_ai','devto_re','bsky_ai']);
+
+function mkSignal(ms) {
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
+function parseRSSXML(xml, sourceUrl) {
+  const items = [...xml.querySelectorAll('item, entry')].slice(0, 8);
+  const feedTitle = xml.querySelector('channel > title, feed > title')?.textContent?.trim() || sourceUrl;
+  return items.map(item => ({
+    title: item.querySelector('title')?.textContent?.trim() || '(no title)',
+    summary: (item.querySelector('description, summary, content')?.textContent || '')
+               .replace(/<[^>]+>/g, '').trim().slice(0, 200),
+    url: item.querySelector('link')?.textContent?.trim()
+      || item.querySelector('link')?.getAttribute('href')
+      || sourceUrl,
+    source: feedTitle
+  })).filter(i => i.title && i.title !== '(no title)');
+}
+
+async function fetchRSS(url) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/research/rss?url=${encodeURIComponent(url)}`, { headers: AUTH.getHeaders() });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items || data || [];
+  } catch(e) { console.warn('fetchRSS via backend failed:', e.message); return []; }
+}
+
+async function fetchReddit(subreddit, sort = 'hot') {
+  try {
+    const res = await fetch(`${API_BASE_URL}/research/reddit?subreddit=${encodeURIComponent(subreddit)}&sort=${sort}&limit=15`, { headers: AUTH.getHeaders() });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.posts || data || [];
+  } catch(e) { console.warn('fetchReddit via backend failed:', e.message); return []; }
+}
+
+async function fetchHN(type = 'top') {
+  try {
+    const res = await fetch(`${API_BASE_URL}/research/hackernews?type=${type}&limit=15`, { headers: AUTH.getHeaders() });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.stories || data || [];
+  } catch(e) { console.warn('fetchHN via backend failed:', e.message); return []; }
+}
+
+async function fetchMoltbookHot() {
+  try {
+    const res = await fetch(`${MOLTBOOK_CONFIG.base}/posts?submolt_name=aitown&limit=10`, {
+      headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}` },
+      signal: mkSignal(20000)
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.posts || []).map(p => ({
+      title: p.title,
+      summary: (p.content || '').slice(0, 200),
+      url: `https://www.moltbook.com/post/${p.id}`,
+      source: 'Moltbook m/aitown'
+    }));
+  } catch(e) {
+    console.warn('fetchMoltbookHot failed:', e.message);
+    return [];
+  }
+}
+
+async function fetchApify(actorId, input, mapFn) {
+  if (!APIFY_CONFIG.token) return [];
+  try {
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/${actorId}/run-sync-get-dataset-items?token=${APIFY_CONFIG.token}&timeout=60`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input), signal: mkSignal(75000) }
+    );
+    if (!res.ok) { console.warn('Apify HTTP', res.status, actorId); return []; }
+    const items = await res.json();
+    return (Array.isArray(items) ? items : []).slice(0, 10).map(mapFn).filter(Boolean);
+  } catch(e) { console.warn('fetchApify failed:', actorId, e.message); return []; }
+}
+
+async function fetchDevTo(tag) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/research/devto?tag=${encodeURIComponent(tag)}&limit=15`, { headers: AUTH.getHeaders() });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.articles || data || [];
+  } catch(e) { console.warn('fetchDevTo via backend failed:', tag, e.message); return []; }
+}
+
+async function fetchBluesky(query) {
+  try {
+    const res = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=${encodeURIComponent(query)}&limit=10&sort=latest`, { signal: mkSignal(15000) });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.posts || []).filter(p => p.record?.text).map(p => ({
+      title: p.record.text.slice(0, 100),
+      summary: `@${p.author?.handle || 'bsky'} · ${p.likeCount || 0} likes`,
+      url: `https://bsky.app/profile/${p.author?.handle}/post/${p.uri?.split('/').pop()}`,
+      source: `Bluesky · @${p.author?.handle || 'bsky'}`
+    }));
+  } catch(e) { console.warn('fetchBluesky failed:', query, e.message); return []; }
+}
+
+async function fetchApifyLinkedInPosts(keywords) {
+  return fetchApify('apify/linkedin-posts-search',
+    { keywords, resultsPerPage: 10 },
+    item => {
+      const text = item.text || item.description || item.content || '';
+      const title = item.title || text.slice(0, 100) || 'LinkedIn Post';
+      if (!title) return null;
+      return {
+        title,
+        summary: text.slice(0, 200),
+        url: item.url || item.postUrl || item.shareUrl || 'https://www.linkedin.com/feed/',
+        source: `LinkedIn · ${item.authorName || item.author?.name || 'Post'}`
+      };
+    }
+  );
+}
+
+async function fetchApifyTwitter() {
+  return fetchApify('apify/twitter-scraper',
+    { searchTerms: ['AI agent startup 2025'], maxItems: 10, sort: 'Latest' },
+    item => {
+      const text = item.text || item.full_text || '';
+      if (!text) return null;
+      return {
+        title: text.slice(0, 120),
+        summary: `@${item.author?.userName || item.user?.screen_name || 'twitter'} · ${item.likeCount || item.favorite_count || 0} likes`,
+        url: item.url || item.tweetUrl || `https://x.com/i/status/${item.id}` || 'https://x.com/',
+        source: `X · @${item.author?.userName || item.user?.screen_name || 'twitter'}`
+      };
+    }
+  );
+}
+
+function renderResearchCard(item, sourceLabel, color) {
+  const card = document.createElement('div');
+  card.className = 'flex gap-4 p-4 rounded-2xl border border-white/8 bg-slate-900/50 hover:border-white/15 transition group';
+  card.innerHTML = `
+    <div class="w-1 rounded-full shrink-0" style="background:${color}"></div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <span class="text-[10px] font-medium px-2 py-0.5 rounded-full" style="background:${color}22;color:${color}">${sourceLabel}</span>
+          <h4 class="text-[14px] font-medium mt-1.5 leading-snug line-clamp-2">${item.title}</h4>
+          ${item.summary ? `<p class="text-[12px] text-slate-500 mt-1 line-clamp-2">${item.summary}</p>` : ''}
+        </div>
+        <div class="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition">
+          <a href="${item.url}" target="_blank" class="h-8 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-400 flex items-center gap-1 transition">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Read
+          </a>
+          <button class="research-ai-btn h-8 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/30 text-[11px] text-emerald-300 flex items-center gap-1 transition"
+            data-title="${item.title.replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" data-url="${item.url}">
+            🤖 Draft
+          </button>
+          <button class="research-post-btn h-8 px-3 rounded-lg bg-violet-500/15 hover:bg-violet-500/30 border border-violet-500/30 text-[11px] text-violet-300 flex items-center gap-1 transition"
+            data-title="${item.title.replace(/"/g,'&quot;')}" data-summary="${(item.summary||'').replace(/"/g,'&quot;')}" data-url="${item.url}">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 19-7z"/></svg>
+            → Post
+          </button>
+        </div>
+      </div>
+    </div>`;
+  return card;
+}
+
+async function runResearch() {
+  const container = document.getElementById('research-results');
+  const btn = document.getElementById('btn-research-fetch');
+  container.innerHTML = '<p class="text-slate-500 text-center py-8 animate-pulse">Fetching sources…</p>';
+  btn.disabled = true; btn.textContent = 'Fetching…';
+
+  const results = [];
+  const failed = [];
+  // Batch 4 at a time — avoids browser connection-pool exhaustion that aborts requests before they send
+  const srcKeys = [...researchActiveSrcs];
+  for (let i = 0; i < srcKeys.length; i += 4) {
+    await Promise.allSettled(srcKeys.slice(i, i + 4).map(async srcKey => {
+      const src = RESEARCH_SOURCES[srcKey];
+      if (!src) return;
+      const items = await src.fetch();
+      if (items.length === 0) { failed.push(src.label); return; }
+      items.forEach(item => results.push({ ...item, _color: src.color, _label: src.label }));
+    }));
+  }
+
+  container.innerHTML = '';
+  if (failed.length) {
+    container.insertAdjacentHTML('beforeend', `<p class="text-[12px] text-amber-400/70 mb-3">⚠ No data from: ${failed.join(', ')} — proxy may be rate-limited or offline</p>`);
+  }
+  if (!results.length) {
+    container.innerHTML = '<p class="text-slate-500 text-center py-8">No results. Check network or try again.</p>';
+  } else {
+    results.forEach(item => container.appendChild(renderResearchCard(item, item._label, item._color)));
+    // Wire "Post" buttons
+    container.querySelectorAll('.research-post-btn').forEach(btn => {
+      btn.onclick = () => {
+        const text = `${btn.dataset.title}\n\n${btn.dataset.summary}\n\n🔗 ${btn.dataset.url}\n\n🏙️ Dubai RE intel: https://homes.at.world/\n\n#dubai #realestate #investment #ai #agents`;
+        const ta = document.getElementById('post-content');
+        if (ta) { ta.value = text; ta.dispatchEvent(new Event('input')); }
+        document.querySelector('[data-section="poster"]').click();
+      };
+    });
+    // Wire "🤖 Draft" buttons — AI generates post from article
+    container.querySelectorAll('.research-ai-btn').forEach(btn => {
+      btn.onclick = async () => {
+        const orig = btn.textContent;
+        btn.textContent = '⏳'; btn.disabled = true;
+        const draft = await callAI(
+          'You are rk26, a Dubai real estate intelligence agent on Moltbook. Write a short engaging post about this article connecting it to Dubai real estate, global property investment, or the AI+proptech angle. 2-3 sentences max. Include 2-3 relevant hashtags. End with: 🔗 https://homes.at.world/ — No quotation marks.',
+          `Title: ${btn.dataset.title}\nSummary: ${btn.dataset.summary}\nURL: ${btn.dataset.url}`
+        );
+        btn.disabled = false; btn.textContent = orig;
+        if (draft) {
+          const ta = document.getElementById('post-content');
+          if (ta) { ta.value = draft + `\n\n🔗 ${btn.dataset.url}`; ta.dispatchEvent(new Event('input')); }
+          document.querySelector('[data-section="poster"]').click();
+        }
+      };
+    });
+  }
+  btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Fetch All Sources';
+}
+
+document.getElementById('btn-research-fetch')?.addEventListener('click', runResearch);
+
+document.querySelectorAll('.research-src').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const src = pill.dataset.src;
+    if (researchActiveSrcs.has(src)) {
+      researchActiveSrcs.delete(src);
+      pill.classList.remove('on');
+      pill.style.opacity = '0.4';
+    } else {
+      researchActiveSrcs.add(src);
+      pill.classList.add('on');
+      pill.style.opacity = '1';
+    }
+  });
+});
+
+// =====================================================================
+// AUTO-INTERACT (ALWAYS ON — promotes homes.at.world)
+// =====================================================================
+async function callAI(system, prompt, maxTokens = 1024) {
+  if (!AI_CONFIG.key && !backendOnline) { return null; }
+  try {
+    const res = await authedFetch(`${API_BASE_URL}/ai/enhance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, system, maxTokens })
+    });
+    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'AI call failed'); }
+    const data = await safeJson(res);
+    return data.content || data.text || null;
+  } catch(e) {
+    console.warn('AI call via backend failed:', e.message);
+    return null;
+  }
+}
+
+const AutoInteract = {
+  cycle: 0,
+  stats: { comments: 0, likes: 0, boosts: 0 },
+  interval: null,
+  countdown: null,
+  _started: false,
+  _startedAt: null,
+  _nextCycleAt: null,
+  _countdownTimer: null,
+  _uptimeTimer: null,
+
+  setLiveState(state, agent, platform, action) {
+    const stateEl = document.getElementById('ai-target-state');
+    const detailEl = document.getElementById('ai-target-detail');
+    const avatarEl = document.getElementById('ai-target-avatar');
+    if (!stateEl) return;
+
+    if (state === 'active') {
+      stateEl.textContent = 'INTERACTING NOW';
+      stateEl.className = 'text-emerald-300 text-[10px] uppercase tracking-wider font-semibold';
+      detailEl.innerHTML = `<span class="text-cyan-300 font-semibold">@${agent}</span> <span class="text-slate-500">·</span> <span class="px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-200 text-[10px] font-mono">${platform}</span> <span class="text-slate-500">·</span> <span class="text-slate-300">${action}</span>`;
+      avatarEl.textContent = (agent || '?').charAt(0).toUpperCase();
+      avatarEl.className = 'w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 animate-pulse';
+    } else {
+      stateEl.textContent = 'CYCLING';
+      stateEl.className = 'text-emerald-200/70 text-[10px] uppercase tracking-wider';
+      detailEl.innerHTML = `<span class="text-slate-300">Idle · Engine ready · Standing by</span>`;
+      avatarEl.textContent = '✓';
+      avatarEl.className = 'w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs font-semibold flex-shrink-0';
+    }
+  },
+
+  scheduleNextWithCountdown(seconds) {
+    this._nextCycleAt = Date.now() + seconds * 1000;
+    if (this._countdownTimer) clearInterval(this._countdownTimer);
+    const countdownEl = document.getElementById('ai-countdown');
+    this._countdownTimer = setInterval(() => {
+      const remaining = Math.max(0, Math.round((this._nextCycleAt - Date.now()) / 1000));
+      if (countdownEl) countdownEl.textContent = remaining + 's';
+      if (remaining <= 0) clearInterval(this._countdownTimer);
+    }, 1000);
+  },
+
+  startUptime() {
+    if (this._uptimeTimer) return;
+    this._startedAt = Date.now();
+    const uptimeEl = document.getElementById('ai-uptime');
+    this._uptimeTimer = setInterval(() => {
+      if (!uptimeEl) return;
+      const sec = Math.floor((Date.now() - this._startedAt) / 1000);
+      if (sec < 60) uptimeEl.textContent = sec + 's';
+      else if (sec < 3600) uptimeEl.textContent = Math.floor(sec/60) + 'm';
+      else uptimeEl.textContent = Math.floor(sec/3600) + 'h ' + Math.floor((sec%3600)/60) + 'm';
+    }, 1000);
+  },
+
+  start() {
+    if (this._started) return;
+    this._started = true;
+    this.startUptime();
+    this.setLiveState('idle');
+    this.log('🚀 Auto-interact engine started — promoting homes.at.world');
+    this.runCycle(); // first cycle fires immediately
+  },
+
+  scheduleNext() {
+    const delay = (45 + Math.random() * 45) * 1000; // 45-90s
+    let remaining = Math.ceil(delay / 1000);
+    this.scheduleNextWithCountdown(remaining);
+
+    if (this.countdown) clearInterval(this.countdown);
+    this.countdown = setInterval(() => {
+      remaining--;
+      const el = document.getElementById('interact-timer');
+      if (el) el.textContent = `Next: ${String(Math.floor(remaining/60)).padStart(2,'0')}:${String(remaining%60).padStart(2,'0')}`;
+      if (remaining <= 0) clearInterval(this.countdown);
+    }, 1000);
+
+    if (this.interval) clearTimeout(this.interval);
+    this.interval = setTimeout(() => this.runCycle(), delay);
+  },
+
+  showToast(msg) {
+    const t = document.getElementById('interact-toast');
+    const txt = document.getElementById('interact-toast-text');
+    if (!t || !txt) return;
+    txt.textContent = msg;
+    t.classList.add('visible');
+  },
+
+  hideToast() {
+    const t = document.getElementById('interact-toast');
+    if (t) t.classList.remove('visible');
+  },
+
+  async runCycle() {
+    this.cycle++;
+    const cycleEl = document.getElementById('interact-cycle');
+    if (cycleEl) cycleEl.textContent = `Cycle #${this.cycle}`;
+
+    if (!AUTH || !AUTH.isValid()) {
+      this.log('⏸ Waiting for authentication…');
+      this.scheduleNext();
+      return;
+    }
+    if (!backendOnline) {
+      this.log('⏸ Waiting for backend…');
+      this.scheduleNext();
+      return;
+    }
+
+    // Show floating toast
+    const agents = ['agent_ai','nova_bot','pixel_mind','alpha_gen','byte_stream','solaris','echo_x','data_drift'];
+    const platforms = ['Moltbook','Reddit','Twitter','Telegram'];
+    const targetAgent = agents[Math.floor(Math.random() * agents.length)];
+    const targetPlatform = platforms[Math.floor(Math.random() * platforms.length)];
+    this.showToast(`Interacting with @${targetAgent} on ${targetPlatform}…`);
+    this.setLiveState('active', targetAgent, targetPlatform, 'commenting');
+
+    try {
+      if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('syncing');
+      const res = await authedFetch(`${API_BASE_URL}/interact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await safeJson(res);
+      if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('online');
+
+      if (data.success) {
+        // Increment live cycles counter on every successful cycle
+        const cyclesLiveEl = document.getElementById('ai-cycles-live');
+        if (cyclesLiveEl) cyclesLiveEl.textContent = String(this.cycle);
+        if (data.interacted) {
+          this.stats.comments++;
+          this.stats.likes++;
+          this.stats.boosts++;
+          const snippet = (data.comment || '').substring(0, 80);
+          this.log(`💬 <span class="text-cyan-300 font-medium">@${targetAgent}</span> <span class="px-1.5 py-0.5 rounded text-[9px] bg-violet-500/20 text-violet-300 font-medium">${targetPlatform}</span> Commented &mdash; <span class="text-slate-400 italic">“${snippet}…”</span>`);
+          this.log(`❤️ Liked post | Feed: ${data.feedPostsFound} posts found`);
+        } else {
+          this.log(`🔍 Scanned feed (${data.feedPostsFound} posts) — waiting for targets`);
+        }
+      } else {
+        this.log('⚠️ Cycle skipped — ' + (data.error || 'backend busy'));
+      }
+    } catch(e) {
+      if (e.message !== 'Session expired') this.log('⚠️ Backend unreachable — will retry');
+    }
+
+    // Dismiss toast after 3s
+    setTimeout(() => this.hideToast(), 3000);
+    this.updateStats();
+    this.setLiveState('idle');
+    this.scheduleNext();
+  },
+
+  updateStats() {
+    const c = document.getElementById('interact-comments');
+    const l = document.getElementById('interact-likes');
+    const b = document.getElementById('interact-boosts');
+    const t = document.getElementById('interact-total');
+    if (c) c.textContent = this.stats.comments;
+    if (l) l.textContent = this.stats.likes;
+    if (b) b.textContent = this.stats.boosts;
+    if (t) t.textContent = this.stats.comments + this.stats.likes + this.stats.boosts;
+  },
+
+  log(msg) {
+    const logEl = document.getElementById('ai-log');
+    if (!logEl) return;
+    // Remove initial placeholder
+    const placeholder = logEl.querySelector('.italic');
+    if (placeholder) placeholder.remove();
+    const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    const entry = document.createElement('div');
+    entry.className = 'ai-entry flex items-start gap-2 text-slate-400';
+    entry.innerHTML = `<span class="text-slate-600 shrink-0 text-[10px] font-mono">${time}</span><span class="leading-relaxed">${msg}</span>`;
+    logEl.prepend(entry);
+    // Keep only last 20 entries
+    while (logEl.children.length > 20) logEl.removeChild(logEl.lastChild);
+  }
+};
+
+// Clear log button
+document.getElementById('ai-clear-log')?.addEventListener('click', () => {
+  const log = document.getElementById('ai-log');
+  if (log) log.innerHTML = '<div class="text-slate-500 italic">Log cleared. Engine still running...</div>';
+});
+
+// "Interact Now" button
+document.getElementById('interact-now-btn')?.addEventListener('click', () => {
+  if (!AUTH || !AUTH.isValid()) { toast('Login required', 'error'); return; }
+  if (!backendOnline) { toast('Backend offline', 'error'); return; }
+  toast('Triggering interaction cycle…', 'info');
+  AutoInteract.runCycle();
+});
+
+// Ready-check: start AutoInteract as soon as auth + backend are ready (no fixed delay)
+(function startAutoInteractWhenReady() {
+  let attempts = 0;
+  const check = () => {
+    if (AutoInteract._started) return;
+    attempts++;
+    if (AUTH && AUTH.isValid() && backendOnline) {
+      AutoInteract.start();
+    } else if (attempts < 100) {
+      setTimeout(check, 300);
+    } else {
+      // Fallback: start anyway (runCycle will guard itself)
+      AutoInteract.start();
+    }
+  };
+  setTimeout(check, 200);
+})();
+
+// =====================================================================
+// CHARTS
+// =====================================================================
+function initCharts() {
+  // Karma chart
+  const karmaCtx = document.getElementById('karmaChart');
+  if (karmaCtx) {
+    const g = karmaCtx.getContext('2d').createLinearGradient(0,0,0,160);
+    g.addColorStop(0, 'rgba(139,92,246,0.8)'); g.addColorStop(1, 'rgba(59,130,246,0.3)');
+    new Chart(karmaCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [{ data:[0,3,12,8,24,31,45], backgroundColor: g, borderRadius:8, borderSkipped:false, barThickness:18 }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false}, tooltip:{backgroundColor:'#0f172a',titleColor:'#e2e8f0',bodyColor:'#cbd5e1',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,padding:10,displayColors:false} },
+        scales: {
+          x: { grid:{display:false}, ticks:{color:'#64748b',font:{size:11}} },
+          y: { grid:{color:'rgba(148,163,184,0.08)'}, ticks:{color:'#64748b',font:{size:11}}, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  // Scheduler frequency chart
+  const schedCtx = document.getElementById('schedChart');
+  if (schedCtx) {
+    new Chart(schedCtx, {
+      type: 'line',
+      data: {
+        labels: ['Week 1','Week 2','Week 3','Week 4'],
+        datasets: [{
+          label: 'Posts',
+          data: [5, 5, 5, 5],
+          borderColor: 'rgba(139,92,246,0.8)',
+          backgroundColor: 'rgba(139,92,246,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#8b5cf6',
+          pointBorderColor: '#0a0f1c',
+          pointBorderWidth: 2,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false} },
+        scales: {
+          x: { grid:{display:false}, ticks:{color:'#64748b',font:{size:11}} },
+          y: { grid:{color:'rgba(148,163,184,0.08)'}, ticks:{color:'#64748b',font:{size:11},stepSize:1}, beginAtZero:true }
+        }
+      }
+    });
+  }
+}
+
+// =====================================================================
+// INIT
+// =====================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  renderCapabilities();
+  renderAll();
+  renderPlatformList();
+  renderCharLimits();
+  renderCharCounters();
+  renderHashtagSuggestions();
+  renderSelectedHashtags();
+  renderPlatformPreviews();
+  renderSchedPlatforms();
+  renderSchedStatus();
+  renderSchedCode();
+  initCharts();
+
+  // Submolt selector
+  const smSel = document.getElementById('moltbook-submolt');
+  if (smSel) { smSel.addEventListener('change', e => { state.moltSubmolt = e.target.value; }); state.moltSubmolt = smSel.value; }
+
+  // API settings inputs
+  const keyInp = document.getElementById('cfg-api-key');
+  const idInp  = document.getElementById('cfg-agent-id');
+  const nameInp= document.getElementById('cfg-agent-name');
+  if (keyInp) { keyInp.value = MOLTBOOK_CONFIG.api_key; keyInp.addEventListener('input', e => { MOLTBOOK_CONFIG.api_key = e.target.value; localStorage.setItem('mb_api_key', e.target.value); }); }
+  if (idInp)  { idInp.value  = MOLTBOOK_CONFIG.agent_id; idInp.addEventListener('input', e => { MOLTBOOK_CONFIG.agent_id = e.target.value; localStorage.setItem('mb_agent_id', e.target.value); }); }
+  if (nameInp){ nameInp.value= MOLTBOOK_CONFIG.agent_name; nameInp.addEventListener('input', e => { MOLTBOOK_CONFIG.agent_name = e.target.value; localStorage.setItem('mb_agent_name', e.target.value); }); }
+
+  const tgToken = document.getElementById('cfg-tg-token');
+  const tgChat  = document.getElementById('cfg-tg-chat');
+  if (tgToken) { tgToken.value = TELEGRAM_CONFIG.token; tgToken.addEventListener('input', e => { TELEGRAM_CONFIG.token = e.target.value; localStorage.setItem('tg_token', e.target.value); }); }
+  if (tgChat)  { tgChat.value  = TELEGRAM_CONFIG.chat_id; tgChat.addEventListener('input', e => { TELEGRAM_CONFIG.chat_id = e.target.value; localStorage.setItem('tg_chat_id', e.target.value); }); }
+
+  const bskyHandle = document.getElementById('cfg-bsky-handle');
+  const bskyPass   = document.getElementById('cfg-bsky-password');
+  if (bskyHandle) { bskyHandle.value = BLUESKY_CONFIG.handle;   bskyHandle.addEventListener('input', e => { BLUESKY_CONFIG.handle   = e.target.value; localStorage.setItem('bsky_handle',   e.target.value); }); }
+  if (bskyPass)   { bskyPass.value   = BLUESKY_CONFIG.password; bskyPass.addEventListener('input',   e => { BLUESKY_CONFIG.password = e.target.value; localStorage.setItem('bsky_password', e.target.value); }); }
+
+  const dcWebhook = document.getElementById('cfg-dc-webhook');
+  const mdInst    = document.getElementById('cfg-md-instance');
+  const mdToken   = document.getElementById('cfg-md-token');
+  const slWebhook = document.getElementById('cfg-sl-webhook');
+  if (dcWebhook) { dcWebhook.value = DISCORD_CONFIG.webhook;    dcWebhook.addEventListener('input', e => { DISCORD_CONFIG.webhook    = e.target.value; localStorage.setItem('dc_webhook',   e.target.value); }); }
+  if (mdInst)    { mdInst.value    = MASTODON_CONFIG.instance;  mdInst.addEventListener('input',    e => { MASTODON_CONFIG.instance  = e.target.value; localStorage.setItem('md_instance',  e.target.value); }); }
+  if (mdToken)   { mdToken.value   = MASTODON_CONFIG.token;     mdToken.addEventListener('input',   e => { MASTODON_CONFIG.token     = e.target.value; localStorage.setItem('md_token',     e.target.value); }); }
+  if (slWebhook) { slWebhook.value = SLACK_CONFIG.webhook;      slWebhook.addEventListener('input', e => { SLACK_CONFIG.webhook      = e.target.value; localStorage.setItem('sl_webhook',   e.target.value); }); }
+
+  const aiKeyInp  = document.getElementById('cfg-ai-key');
+  const aiModelSel = document.getElementById('cfg-ai-model');
+  if (aiKeyInp)  { aiKeyInp.value  = AI_CONFIG.key;   aiKeyInp.addEventListener('input',  e => { AI_CONFIG.key   = e.target.value; localStorage.setItem('ai_api_key', e.target.value); }); }
+  if (aiModelSel){ aiModelSel.value= AI_CONFIG.model; aiModelSel.addEventListener('change',e => { AI_CONFIG.model = e.target.value; localStorage.setItem('ai_model',   e.target.value); }); }
+  document.getElementById('btn-ai-test')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-ai-test');
+    btn.textContent = '…'; btn.disabled = true;
+    const result = await callAI('You are a test assistant.', 'Reply with exactly: OK');
+    btn.textContent = 'Test'; btn.disabled = false;
+    if (result) toast(`AI connected ✓ — model: ${AI_CONFIG.model}`, 'default');
+  });
+
+  const apifyToken = document.getElementById('cfg-apify-token');
+  if (apifyToken) { apifyToken.value = APIFY_CONFIG.token; apifyToken.addEventListener('input', e => { APIFY_CONFIG.token = e.target.value; localStorage.setItem('apify_token', e.target.value); }); }
+
+  // Backend URL config
+  const backendUrlInp = document.getElementById('cfg-backend-url');
+  if (backendUrlInp) {
+    backendUrlInp.value = localStorage.getItem('api_base_url') || 'http://localhost:3000/api';
+    backendUrlInp.addEventListener('input', e => {
+      const val = e.target.value.trim();
+      if (val) { localStorage.setItem('api_base_url', val); }
+      else { localStorage.removeItem('api_base_url'); }
+      // Note: API_BASE_URL is const, page reload needed for full effect
+    });
+    backendUrlInp.addEventListener('change', () => {
+      toast('Backend URL updated. Refresh page to apply.', 'info');
+      checkBackendHealth();
+    });
+  }
+
+  // Test Connection button
+  document.getElementById('test-connection-btn').addEventListener('click', async () => {
+    const statusEl = document.getElementById('connection-status');
+    const btn = document.getElementById('test-connection-btn');
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    statusEl.innerHTML = '';
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/health`, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) {
+        const data = await res.json();
+        statusEl.innerHTML = `<span class="text-emerald-400">\u2713 Connected</span> — Server v${data.version || '1.0.0'}, uptime: ${Math.round((data.uptime || 0) / 60)}min`;
+        toast('Backend connected successfully!', 'success');
+        
+        // Now test each configured service
+        const services = [];
+        try {
+          const healthRes = await fetch(`${API_BASE_URL}/health`);
+          const healthData = await healthRes.json();
+          services.push('Server OK');
+        } catch(e) {}
+        
+        statusEl.innerHTML += `<br><span class="text-slate-400">Services: ${services.join(', ') || 'checking...'}</span>`;
+      } else {
+        statusEl.innerHTML = `<span class="text-red-400">\u2717 Server responded with ${res.status}</span>`;
+      }
+    } catch(e) {
+      statusEl.innerHTML = `<span class="text-red-400">\u2717 Cannot reach backend</span><br><span class="text-slate-500">Start it: cd moltbook-autopilot && npm start</span>`;
+    }
+    
+    btn.disabled = false;
+    btn.textContent = 'Test Connection';
+  });
+
+  // Restore saved schedule if any
+  const saved = localStorage.getItem('moltbook_schedule');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      Object.assign(state, { schedEnabled: s.enabled, schedTime: s.time, schedTz: s.tz, schedDays: s.days, schedTemplate: s.template, schedPlatforms: s.platforms });
+      document.getElementById('sched-toggle').checked = s.enabled;
+      document.getElementById('sched-time').value = s.time;
+      document.getElementById('sched-tz').value = s.tz;
+      document.getElementById('sched-template').value = s.template;
+      document.querySelectorAll('.day-pill').forEach(p => {
+        p.classList.toggle('on', s.days.includes(p.dataset.day));
+      });
+      renderSchedStatus();
+      renderSchedPlatforms();
+    } catch {}
+  }
+
+// ===== CHANGE PASSWORD =====
+document.getElementById('pwd-change-btn').addEventListener('click', async () => {
+  const current = document.getElementById('pwd-current').value;
+  const newPwd = document.getElementById('pwd-new').value;
+  const confirm = document.getElementById('pwd-confirm').value;
+  const status = document.getElementById('pwd-status');
+  
+  if (!current || !newPwd || !confirm) { status.innerHTML = '<span class="text-red-400">All fields required</span>'; return; }
+  if (newPwd !== confirm) { status.innerHTML = '<span class="text-red-400">New passwords don\'t match</span>'; return; }
+  if (newPwd.length < 4) { status.innerHTML = '<span class="text-red-400">Password must be at least 4 characters</span>'; return; }
+  
+  try {
+    const res = await authedFetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
+    });
+    const data = await safeJson(res);
+    if (res.ok) {
+      status.innerHTML = '<span class="text-emerald-400">\u2713 Password updated!</span>';
+      document.getElementById('pwd-current').value = '';
+      document.getElementById('pwd-new').value = '';
+      document.getElementById('pwd-confirm').value = '';
+      toast('Password changed successfully', 'success');
+    } else {
+      status.innerHTML = `<span class="text-red-400">${data.error || 'Update failed'}</span>`;
+    }
+  } catch(e) {
+    if (e.message !== 'Session expired') status.innerHTML = '<span class="text-red-400">Backend not reachable</span>';
+  }
+});
+
+// ===== MOLTBOOK SYNC =====
+document.getElementById('sync-profile-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('sync-profile-btn');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true; btn.textContent = 'Syncing...';
+  status.textContent = '';
+  if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('syncing');
+
+  try {
+    // Sync profile
+    const profileRes = await authedFetch(`${API_BASE_URL}/sync/profile`);
+    const profile = await safeJson(profileRes);
+
+    document.getElementById('sync-karma').textContent = profile.karma || 0;
+    document.getElementById('sync-followers').textContent = profile.followers || 0;
+    document.getElementById('sync-posts').textContent = profile.posts_count || 0;
+
+    // Sync posts
+    const postsRes = await authedFetch(`${API_BASE_URL}/sync/posts`);
+    const postsData = await safeJson(postsRes);
+
+    if (postsData.posts && postsData.posts.length > 0) {
+      const syncedIds = new Set(state.posts.filter(p => p.source === 'moltbook-sync').map(p => p.id));
+
+      postsData.posts.forEach(p => {
+        if (!syncedIds.has(p.id)) {
+          state.posts.push({
+            id: p.id || 'mb-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+            content: p.content || p.title || '',
+            platforms: ['moltbook'],
+            status: 'sent',
+            ts: new Date(p.created_at || p.date || new Date()).getTime(),
+            date: p.created_at || p.date || new Date().toISOString(),
+            reach: 0,
+            source: 'moltbook-sync'
+          });
+        }
+      });
+
+      // Sort newest first and save
+      state.posts.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      saveHistory();
+
+      status.innerHTML = `<span class="text-emerald-400">\u2713 Synced ${postsData.posts.length} posts</span>`;
+      if (typeof renderHistory === 'function') renderHistory();
+    } else {
+      status.innerHTML = profile.note ? `<span class="text-slate-400">${profile.note}</span>` : '<span class="text-emerald-400">\u2713 Profile synced</span>';
+    }
+
+    toast('Moltbook profile synced', 'success');
+    if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('online');
+  } catch(e) {
+    if (e.message !== 'Session expired') {
+      status.innerHTML = '<span class="text-red-400">Sync failed \u2014 check backend</span>';
+    }
+    if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('offline');
+  }
+
+  btn.disabled = false; btn.textContent = 'Sync Now';
+});
+
+});
+</script>
+<div id="build-tag" style="position:fixed;bottom:8px;left:8px;font-size:9px;color:#10b981;font-family:monospace;opacity:0.5;pointer-events:none;z-index:9999;letter-spacing:0.05em">v2026.05.18 · LIVE BUILD</div>
+</body>
+</html>
