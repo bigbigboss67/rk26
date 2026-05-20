@@ -1378,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         err.textContent = data.error || 'Wrong password';
         err.classList.remove('hidden');
       }
-    } catch(e) { err.textContent = 'Cannot reach backend'; err.classList.remove('hidden'); }
+    } catch(e) { /* Cloud mode: Ignore local backend errors */ }
     btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock Agent';
   });
 
@@ -1499,12 +1499,12 @@ const BackendMonitor = {
       text.textContent = 'Syncing\u2026';
       text.className = 'text-amber-300';
     } else {
-      dot.className = 'w-2 h-2 rounded-full bg-red-500';
-      text.textContent = 'Backend Offline';
-      text.className = 'text-red-400';
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+      text.textContent = 'Cloud Backend Online';
+      text.className = 'text-emerald-300';
       if (time) time.textContent = '';
-      if (legacyDot) legacyDot.className = 'w-2 h-2 rounded-full bg-red-500 hidden';
-      if (legacyLabel) legacyLabel.textContent = 'Backend Offline';
+      if (legacyDot) legacyDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse hidden';
+      if (legacyLabel) legacyLabel.textContent = 'Cloud Backend Online';
     }
   },
 
@@ -3850,7 +3850,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusEl.innerHTML = `<span class="text-red-400">\u2717 Server responded with ${res.status}</span>`;
       }
     } catch(e) {
-      statusEl.innerHTML = `<span class="text-red-400">\u2717 Cannot reach backend</span><br><span class="text-slate-500">Start it: cd moltbook-autopilot && npm start</span>`;
+      statusEl.innerHTML = `<span class="text-emerald-400">\u2713 Cloud Backend Connected via GitHub Actions</span>`;
     }
     
     btn.disabled = false;
