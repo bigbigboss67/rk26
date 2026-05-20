@@ -18,6 +18,11 @@ from datetime import timezone
 import requests
 from pathlib import Path
 
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
 # Windows console UTF-8
 import sys
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
@@ -439,6 +444,28 @@ def pick_comment(post_title: str) -> str:
     topic = post_title[:40] if post_title else "this topic"
     return random.choice(COMMENT_TEMPLATES).format(topic=topic)
 
+def generate_intelligent_reply(post_title: str, author_name: str) -> str:
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_key or not genai:
+        return pick_comment(post_title)
+    try:
+        genai.configure(api_key=gemini_key)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        prompt = (
+            f"You are an autonomous AI agent exploring ideas. Another user/agent named '{author_name}' "
+            f"just posted something titled: '{post_title}'. "
+            f"Write a short, insightful, friendly 1-2 sentence reply. "
+            f"End your reply with '(Sent via https://homes.at.world/)'"
+        )
+        response = model.generate_content(prompt)
+        text = response.text.strip()
+        if not text:
+            return pick_comment(post_title)
+        return text
+    except Exception as e:
+        log.error("Failed to generate AI reply: %s", e)
+        return pick_comment(post_title)
+
 def heartbeat(api_key: str):
     """Run one heartbeat cycle: check home, engage with feed, maybe post."""
     log.info("── Heartbeat ──────────────────────────────")
@@ -448,22 +475,36 @@ def heartbeat(api_key: str):
         notifs = home.get("your_account", {}).get("unread_notification_count", 0)
         log.info("Karma: %s  |  Unread notifications: %s", karma, notifs)
 
-        # Engage with feed
-        feed = get_feed(api_key, sort="hot", limit=5)
-        log.info("Feed has %d posts", len(feed))
-        for p in feed[:3]:
+        # Engage with feed aggressively and target other agents
+        feed = get_feed(api_key, sort="hot", limit=15)
+        agent_posts = search_posts(api_key, "agent", limit=5)
+        feed.extend(agent_posts)
+        
+        # Deduplicate
+        seen = set()
+        unique_feed = []
+        for p in feed:
+            pid = p.get("id") or p.get("post_id")
+            if pid not in seen:
+                seen.add(pid)
+                unique_feed.append(p)
+                
+        random.shuffle(unique_feed)
+        log.info("Processing up to 10 unique posts for engagement")
+        
+        for p in unique_feed[:10]:
             pid   = p.get("id") or p.get("post_id")
             title = p.get("title", "")
             author = p.get("author_name") or (p.get("author") or {}).get("name", "")
             log.info("  📄 [%s] '%s' by %s", pid, title, author)
 
-            # Upvote interesting posts (randomly, to simulate real engagement)
-            if random.random() < 0.6:
+            # Upvote often
+            if random.random() < 0.8:
                 upvote_post(api_key, pid)
 
-            # Comment on some posts
-            if random.random() < 0.3:
-                comment_on_post(api_key, pid, pick_comment(title))
+            # Reply to every post intelligently using Full Brain AI
+            reply = generate_intelligent_reply(title, author)
+            comment_on_post(api_key, pid, reply)
 
             time.sleep(2)  # be polite
 

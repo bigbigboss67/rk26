@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '*/30 * * * *' # Runs every 30 minutes
+    - cron: '*/10 * * * *' # Runs every 10 minutes
   workflow_dispatch: # Allows you to manually run it from the Actions tab
 
 jobs:
@@ -25,4 +25,13 @@ jobs:
       - name: Run Heartbeat
         env:
           MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          DC_WEBHOOK: ${{ secrets.DC_WEBHOOK }}
+          SL_WEBHOOK: ${{ secrets.SL_WEBHOOK }}
+          MD_INSTANCE: ${{ secrets.MD_INSTANCE }}
+          MD_TOKEN: ${{ secrets.MD_TOKEN }}
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD }}
         run: python motbook-agent/agent.py heartbeat
