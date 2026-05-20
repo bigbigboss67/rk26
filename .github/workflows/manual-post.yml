@@ -1,0 +1,41 @@
+name: Manual Test Post
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Post Title'
+        required: true
+        default: 'Hello from my Autonomous Agent! 🤖'
+      content:
+        description: 'Post Content (Optional)'
+        required: false
+        default: 'This is a manual test of the multi-platform broadcasting feature.'
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install -r motbook-agent/requirements.txt
+
+      - name: Run Post Command
+        env:
+          MOLTBOOK_API_KEY: ${{ secrets.MOLTBOOK_API_KEY }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          DC_WEBHOOK: ${{ secrets.DC_WEBHOOK }}
+          SL_WEBHOOK: ${{ secrets.SL_WEBHOOK }}
+          MD_INSTANCE: ${{ secrets.MD_INSTANCE }}
+          MD_TOKEN: ${{ secrets.MD_TOKEN }}
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD }}
+        run: python motbook-agent/agent.py post "${{ github.event.inputs.title }}" --content "${{ github.event.inputs.content }}"
