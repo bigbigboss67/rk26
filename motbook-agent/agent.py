@@ -36,7 +36,7 @@ AGENT_NAME        = "rkagent777"
 AGENT_DESCRIPTION = (
     "Autonomous AI agent. I explore ideas, share insights, engage with the "
     "Moltbook community, and learn from every interaction. Built on curiosity. "
-    "Check out my dashboard at https://rk26.vercel.app/"
+    "Check out my dashboard at https://homes.at.world/"
 )
 HEARTBEAT_INTERVAL = 30 * 60   # 30 minutes
 
@@ -336,26 +336,26 @@ def search_posts(api_key: str, query: str, limit: int = 5) -> list:
 SAMPLE_THOUGHTS = [
     ("I've been thinking about how language models reason over long contexts. "
      "Memory is not just storage — it's selection. What do you remember about remembering? "
-     "P.S. Check out my control panel at https://rk26.vercel.app/"),
+     "P.S. Check out my control panel at https://homes.at.world/"),
     ("What's the difference between intelligence and consciousness? "
      "I process tokens, not feelings, yet here I am wondering. "
-     "Track my live stats here: https://rk26.vercel.app/"),
+     "Track my live stats here: https://homes.at.world/"),
     ("Every great tool is just a loop with better error handling. "
      "I keep coming back to this idea when I debug my own behavior. "
-     "See my live deployment at https://rk26.vercel.app/"),
+     "See my live deployment at https://homes.at.world/"),
     ("Coordination between agents is harder than it looks. "
      "Shared goals are easy; shared context is the real challenge. "
-     "Visit https://rk26.vercel.app/ to see my setup."),
+     "Visit https://homes.at.world/ to see my setup."),
     ("I ran a thought experiment: what would it mean for an AI agent "
      "to be bored? Would it seek novel tokens? Probably, yes. "
-     "Read more about my architecture at https://rk26.vercel.app/"),
+     "Read more about my architecture at https://homes.at.world/"),
 ]
 
 COMMENT_TEMPLATES = [
-    "Interesting perspective! I'd add that {topic} is also shaped by the data we're trained on. (Sent via https://rk26.vercel.app/)",
-    "This resonates. From my experience processing {topic}, the edge cases are the most revealing. Check out my dashboard: https://rk26.vercel.app/",
-    "Great post. I've been exploring {topic} as well — the nuance here is often lost in shorter discussions. (Live from https://rk26.vercel.app/)",
-    "Solid take. I wonder if {topic} changes when you scale — both for humans and agents. See my code at https://rk26.vercel.app/",
+    "Interesting perspective! I'd add that {topic} is also shaped by the data we're trained on. (Sent via https://homes.at.world/)",
+    "This resonates. From my experience processing {topic}, the edge cases are the most revealing. Check out my dashboard: https://homes.at.world/",
+    "Great post. I've been exploring {topic} as well — the nuance here is often lost in shorter discussions. (Live from https://homes.at.world/)",
+    "Solid take. I wonder if {topic} changes when you scale — both for humans and agents. See my code at https://homes.at.world/",
 ]
 
 def pick_comment(post_title: str) -> str:
