@@ -197,6 +197,10 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Auto-Interact
         </button>
+        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="intelligence">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          Intelligence
+        </button>
         <div class="ml-auto flex items-center gap-2">
           <span class="text-[11px] text-slate-500 whitespace-nowrap" id="sched-status-hdr"></span>
         </div>
@@ -428,6 +432,75 @@
     </div>
     <button id="pwd-change-btn" class="w-full h-9 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[12px] font-medium transition">Update Password</button>
     <div id="pwd-status" class="text-[11px]"></div>
+  </div>
+</div>
+
+<!-- Agent Factory -->
+<div class="rounded-[24px] border border-emerald-500/25 bg-emerald-500/5 glass p-5 mt-6">
+  <div class="flex items-center gap-2 mb-1">
+    <div class="w-5 h-5 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-300"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    </div>
+    <h3 class="font-semibold text-[14px] text-emerald-200">🤖 Universal Agent Factory</h3>
+    <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">any platform</span>
+  </div>
+  <p class="text-[11px] text-slate-500 mb-4">Build a complete autonomous AI agent — Moltbook registration + system prompt + multi-platform posting config + GitHub Actions deploy code. One click.</p>
+  <div class="space-y-3">
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-[11px] text-slate-500 mb-1 block">Agent Name</label>
+        <input id="factory-name" type="text" placeholder="dubai_scout_01" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 focus:border-emerald-500/50 outline-none text-[13px] font-mono text-emerald-300 transition">
+      </div>
+      <div>
+        <label class="text-[11px] text-slate-500 mb-1 block">Claude Model</label>
+        <select id="factory-model" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 outline-none text-[13px] text-emerald-300 transition">
+          <option value="claude-haiku-4-5">Haiku 4.5 (fast, cheap)</option>
+          <option value="claude-sonnet-4-6" selected>Sonnet 4.6 (balanced)</option>
+          <option value="claude-opus-4-7">Opus 4.7 (best)</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">Mission / Description</label>
+      <input id="factory-desc" type="text" placeholder="e.g. Dubai real estate investment analyst" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 focus:border-emerald-500/50 outline-none text-[13px] text-emerald-300 transition">
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">Focus / Personality</label>
+      <select id="factory-focus" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 focus:border-emerald-500/50 outline-none text-[13px] text-emerald-300 transition">
+        <option value="dubai_re">🏙 Dubai Real Estate Analyst</option>
+        <option value="ai_tech">🤖 AI & Technology Scout</option>
+        <option value="global_invest">📈 Global Investment Strategist</option>
+        <option value="proptech">🏗 PropTech Innovation Agent</option>
+        <option value="uae_market">🌍 UAE Market Intelligence</option>
+        <option value="news_curator">📰 News Curator & Summarizer</option>
+        <option value="social_growth">🚀 Social Growth Agent</option>
+        <option value="custom">✏️ Custom (use description)</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">Post to Platforms</label>
+      <div class="flex flex-wrap gap-2">
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" class="factory-platform" value="moltbook" checked> Moltbook</label>
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" class="factory-platform" value="twitter" checked> Twitter/X</label>
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" class="factory-platform" value="telegram" checked> Telegram</label>
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" class="factory-platform" value="linkedin"> LinkedIn</label>
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" class="factory-platform" value="bluesky"> Bluesky</label>
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" class="factory-platform" value="discord"> Discord</label>
+      </div>
+    </div>
+    <div>
+      <label class="text-[11px] text-slate-500 mb-1 block">Post Schedule</label>
+      <select id="factory-schedule" class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-emerald-500/20 outline-none text-[13px] text-emerald-300 transition">
+        <option value="3x">3x daily (9am / 3pm / 9pm GST)</option>
+        <option value="2x">2x daily (9am / 6pm GST)</option>
+        <option value="1x">1x daily (9am GST)</option>
+        <option value="hourly">Every 2 hours</option>
+      </select>
+    </div>
+    <button id="factory-spawn-btn" class="w-full h-10 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[13px] font-semibold transition flex items-center justify-center gap-2">
+      ⚡ Build Universal Agent
+    </button>
+    <div id="factory-result" class="hidden rounded-xl border border-emerald-500/30 bg-[#0a0f1c] p-4 text-[12px] space-y-3"></div>
   </div>
 </div>
         </div>
@@ -878,6 +951,104 @@
       </div>
     </div>
 
+    <!-- INTELLIGENCE SECTION -->
+    <div id="section-intelligence" class="section">
+      <div class="mb-6">
+        <h2 class="text-3xl font-semibold tracking-tight">Intelligence Hub</h2>
+        <p class="text-slate-400 mt-1.5">Web crawler · data analyzer · price predictor · virality scorer — all running on GitHub Actions</p>
+      </div>
+
+      <!-- Supabase connection -->
+      <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5 mb-5">
+        <h3 class="font-semibold text-[15px] mb-3 flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+          Supabase Connection
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-[11px] text-slate-400 mb-1 block">Supabase URL</label>
+            <input id="sb-url" type="text" value="https://zhnrdirwxlosapcbphca.supabase.co" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-500/50"/>
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400 mb-1 block">Supabase Anon Key</label>
+            <input id="sb-key" type="password" value="sb_publishable_iK3tKZ5zYkt6QkOZzRb-Dg_euI2gqnS" class="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-500/50"/>
+          </div>
+        </div>
+        <button id="sb-connect-btn" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-[13px] font-medium rounded-lg transition-colors">
+          Connect &amp; Load Data
+        </button>
+        <span id="sb-status" class="ml-3 text-[12px] text-slate-400"></span>
+      </div>
+
+      <!-- Workflow triggers -->
+      <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5 mb-5">
+        <h3 class="font-semibold text-[15px] mb-3 flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          GitHub Actions — Manual Triggers
+        </h3>
+        <p class="text-[12px] text-slate-400 mb-3">Click to open GitHub Actions and run workflow manually. Runs automatically on schedule.</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/auto-post.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
+            <span class="text-lg">📮</span>
+            <span class="text-[12px] font-medium text-slate-200">Auto Post</span>
+            <span class="text-[10px] text-slate-500">7:17am / 1:43pm / 7:11pm</span>
+          </a>
+          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/super-agent.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
+            <span class="text-lg">🤖</span>
+            <span class="text-[12px] font-medium text-slate-200">Super Agent</span>
+            <span class="text-[10px] text-slate-500">6:05am / 12:33pm / 8:17pm</span>
+          </a>
+          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/crawler.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
+            <span class="text-lg">🕷️</span>
+            <span class="text-[12px] font-medium text-slate-200">Web Crawler</span>
+            <span class="text-[10px] text-slate-500">6:00am / 6:00pm UTC</span>
+          </a>
+          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/predictor.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
+            <span class="text-lg">🔮</span>
+            <span class="text-[12px] font-medium text-slate-200">Predictor</span>
+            <span class="text-[10px] text-slate-500">5:50am UTC daily</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Data panels -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
+        <!-- Scraped items -->
+        <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5">
+          <h3 class="font-semibold text-[14px] mb-3 flex items-center gap-2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Crawled Items <span id="sb-items-count" class="text-[11px] text-slate-500 font-normal ml-1"></span>
+          </h3>
+          <div id="sb-items-list" class="space-y-2 text-[12px] text-slate-400">
+            <p class="text-slate-500 italic">Connect Supabase to load crawled data</p>
+          </div>
+        </div>
+
+        <!-- Price forecasts -->
+        <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5">
+          <h3 class="font-semibold text-[14px] mb-3 flex items-center gap-2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            Price Forecasts <span id="sb-pred-count" class="text-[11px] text-slate-500 font-normal ml-1"></span>
+          </h3>
+          <div id="sb-pred-list" class="space-y-2 text-[12px]">
+            <p class="text-slate-500 italic">Connect Supabase to load forecasts</p>
+          </div>
+        </div>
+
+        <!-- Virality scores -->
+        <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5">
+          <h3 class="font-semibold text-[14px] mb-3 flex items-center gap-2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Virality Scores <span id="sb-viral-count" class="text-[11px] text-slate-500 font-normal ml-1"></span>
+          </h3>
+          <div id="sb-viral-list" class="space-y-2 text-[12px]">
+            <p class="text-slate-500 italic">Connect Supabase to load virality data</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- AUTO-INTERACT SECTION (Always Active) -->
     <div id="section-autointeract" class="section">
       <div class="mb-6">
@@ -997,6 +1168,31 @@
             <div id="interact-total" class="text-xl font-bold text-emerald-300">0</div>
             <div class="text-[10px] text-slate-500">Total</div>
           </div>
+        </div>
+
+        <!-- Submolt Sweep -->
+        <div class="rounded-[24px] border border-cyan-500/25 bg-cyan-500/5 glass p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-5 h-5 rounded-lg bg-cyan-500/20 flex items-center justify-center shrink-0">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-cyan-300"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              </div>
+              <h4 class="text-[13px] font-medium text-cyan-200">Submolt Sweep</h4>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">max 10 per run · auto every 10min</span>
+            </div>
+            <button id="submolt-sweep-btn" class="px-4 py-2 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[12px] font-medium transition flex items-center gap-1.5">
+              🎯 Run Sweep
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-3">Fetches posts from m/investing, m/realestate, m/aitown, m/technology, m/general — upvotes + AI comments up to 10 non-rk26 posts not yet interacted.</p>
+          <div id="sweep-submolts" class="flex flex-wrap gap-2 text-[10px]">
+            <span class="px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-white/5">m/investing</span>
+            <span class="px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-white/5">m/realestate</span>
+            <span class="px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-white/5">m/aitown</span>
+            <span class="px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-white/5">m/technology</span>
+            <span class="px-2 py-1 rounded-full bg-slate-800 text-slate-400 border border-white/5">m/general</span>
+          </div>
+          <div id="sweep-progress" class="hidden mt-3 text-[11px] text-cyan-400 font-mono"></div>
         </div>
 
         <!-- Recent Activity Log -->
@@ -1198,6 +1394,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Check auth on load
   if (AUTH.isValid()) { document.getElementById('auth-overlay').style.display = 'none'; }
+
+  // Auto-fetch research on page load (after short delay to let page settle)
+  setTimeout(() => {
+    if (typeof runResearch === 'function') runResearch();
+  }, 1500);
 });
 
 // =====================================================================
@@ -1348,14 +1549,20 @@ async function checkBackendHealth() { return BackendMonitor.ping(); }
 // user overrides entered in the settings card
 // =====================================================================
 const _DEFAULTS = {
-  mb_api_key:   '',
-  mb_agent_id:  '',
+  mb_api_key:   'moltbook_sk_fcwMVrVl-mlKbLBq4BUbgvNo-EMoIZZx',
+  mb_agent_id:  '8e450a8b-998a-4e4d-8a13-372949bcf61e',
   mb_agent_name:'rk26',
+  sb_url:       'https://zhnrdirwxlosapcbphca.supabase.co',
+  sb_key:       'sb_publishable_iK3tKZ5zYkt6QkOZzRb-Dg_euI2gqnS',
   tg_token:     '',
   tg_chat_id:   ''
 };
-// Only set defaults if user hasn't configured values yet
-Object.entries(_DEFAULTS).forEach(([k,v]) => { if (!localStorage.getItem(k)) localStorage.setItem(k, v); });
+// Always stamp sb credentials — overwrite stale/empty values
+['sb_url','sb_key','mb_api_key','mb_agent_id','mb_agent_name'].forEach(k => {
+  if (_DEFAULTS[k]) localStorage.setItem(k, _DEFAULTS[k]);
+});
+// Other optional keys — only set if missing
+Object.entries(_DEFAULTS).forEach(([k,v]) => { if (v && !localStorage.getItem(k)) localStorage.setItem(k, v); });
 
 const MOLTBOOK_CONFIG = {
   api_key:    localStorage.getItem('mb_api_key'),
@@ -1490,7 +1697,7 @@ const state = {
   interests: ['ai', 'startups', 'memes'],
   moltSubmolt: 'introductions',
   // Poster
-  activePlatforms: ['moltbook', 'telegram'],
+  activePlatforms: ['moltbook', 'telegram', 'discord', 'mastodon', 'slack', 'bluesky', 'twitter', 'linkedin'],
   mediaFile: null,
   postContent: '',
   selectedHashtags: [],
@@ -1566,7 +1773,97 @@ document.querySelectorAll('.section-tab').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('section-' + btn.dataset.section).classList.add('visible');
     if (btn.dataset.section === 'history') renderHistory();
+    if (btn.dataset.section === 'research') {
+      // Auto-fetch if no results yet
+      const container = document.getElementById('research-results');
+      if (!container || container.children.length === 0) runResearch();
+    }
+    if (btn.dataset.section === 'intelligence') loadIntelligenceFromStorage();
   });
+
+  // ── Intelligence tab: Supabase loader ──────────────────────────────────
+  function sbGet(url, key, path) {
+    return fetch(`${url}/rest/v1/${path}`, {
+      headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }
+    }).then(r => r.ok ? r.json() : Promise.reject(r.status));
+  }
+
+  function loadIntelligenceFromStorage() {
+    const url = localStorage.getItem('sb_url') || _DEFAULTS.sb_url;
+    const key = localStorage.getItem('sb_key') || _DEFAULTS.sb_key;
+    document.getElementById('sb-url').value = url;
+    document.getElementById('sb-key').value = key;
+    if (url && key) loadIntelligenceData(url, key);
+  }
+
+  async function loadIntelligenceData(url, key) {
+    const status = document.getElementById('sb-status');
+    status.textContent = 'Loading…';
+    try {
+      // Scraped items count + latest 10
+      const items = await sbGet(url, key, 'scraped_items?select=title,source_type,scraped_at&order=scraped_at.desc&limit=10');
+      document.getElementById('sb-items-count').textContent = `(${items.length} shown)`;
+      const itemsList = document.getElementById('sb-items-list');
+      itemsList.innerHTML = items.length ? items.map(i => `
+        <div class="border-b border-white/5 pb-1.5">
+          <div class="text-slate-300 truncate">${i.title || '—'}</div>
+          <div class="text-[10px] text-slate-500">${i.source_type||''} · ${(i.scraped_at||'').slice(0,16).replace('T',' ')}</div>
+        </div>`).join('') : '<p class="text-slate-500 italic">No data yet — run crawler first</p>';
+
+      // Price predictions
+      const preds = await sbGet(url, key, 'predictions?select=subject,direction,confidence,timeframe,created_at&type=eq.price&order=created_at.desc&limit=12');
+      document.getElementById('sb-pred-count').textContent = `(${preds.length})`;
+      const dirIcon = d => d === 'up' ? '📈' : d === 'down' ? '📉' : '➡️';
+      const confColor = c => c === 'high' ? 'text-emerald-400' : c === 'medium' ? 'text-amber-400' : 'text-slate-400';
+      const predList = document.getElementById('sb-pred-list');
+      predList.innerHTML = preds.length ? preds.map(p => `
+        <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
+          <div>
+            <span class="text-slate-300">${p.subject}</span>
+            <span class="text-[10px] text-slate-500 ml-1">${p.timeframe}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span>${dirIcon(p.direction)}</span>
+            <span class="text-[11px] ${confColor(p.confidence)}">${p.confidence}</span>
+          </div>
+        </div>`).join('') : '<p class="text-slate-500 italic">No forecasts yet — run predictor first</p>';
+
+      // Virality scores
+      const viral = await sbGet(url, key, 'virality_scores?select=topic,score,created_at&order=score.desc&limit=10');
+      document.getElementById('sb-viral-count').textContent = `(${viral.length})`;
+      const viralList = document.getElementById('sb-viral-list');
+      viralList.innerHTML = viral.length ? viral.map(v => `
+        <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
+          <div class="text-slate-300 truncate flex-1 mr-2">${v.topic}</div>
+          <div class="flex items-center gap-1 shrink-0">
+            <div class="w-16 bg-slate-700 rounded-full h-1.5 overflow-hidden">
+              <div class="h-1.5 rounded-full bg-violet-500" style="width:${(v.score||0)*10}%"></div>
+            </div>
+            <span class="text-[11px] text-violet-400 font-medium">${v.score}/10</span>
+          </div>
+        </div>`).join('') : '<p class="text-slate-500 italic">No virality data yet — run predictor first</p>';
+
+      status.textContent = '✓ Connected';
+      status.className = 'ml-3 text-[12px] text-emerald-400';
+      localStorage.setItem('sb_url', url);
+      localStorage.setItem('sb_key', key);
+    } catch(e) {
+      status.textContent = `Error: ${e}`;
+      status.className = 'ml-3 text-[12px] text-red-400';
+    }
+  }
+
+  document.getElementById('sb-connect-btn')?.addEventListener('click', () => {
+    const url = document.getElementById('sb-url').value.trim().replace(/\/$/, '');
+    const key = document.getElementById('sb-key').value.trim();
+    if (!url || !key) { document.getElementById('sb-status').textContent = 'Enter URL and key first'; return; }
+    localStorage.setItem('sb_url', url);
+    localStorage.setItem('sb_key', key);
+    loadIntelligenceData(url, key);
+  });
+
+  // Auto-load Intelligence data on page start
+  loadIntelligenceFromStorage();
 });
 
 // Header "Post Now" quick-jump
@@ -2660,6 +2957,222 @@ document.getElementById('sync-moltbook-btn')?.addEventListener('click', async ()
   } finally {
     btn.textContent = orig; btn.disabled = false;
   }
+});
+
+// =====================================================================
+// SUBMOLT SWEEP
+// =====================================================================
+const SWEEP_SUBMOLTS = ['investing','realestate','aitown','technology','general'];
+
+function getSweepInteracted() {
+  try { return new Set(JSON.parse(localStorage.getItem('mb_interacted_ids') || '[]')); }
+  catch(e) { return new Set(); }
+}
+function saveSweepInteracted(set) {
+  const arr = [...set].slice(-500); // keep last 500 IDs
+  localStorage.setItem('mb_interacted_ids', JSON.stringify(arr));
+}
+
+document.getElementById('submolt-sweep-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('submolt-sweep-btn');
+  const progress = document.getElementById('sweep-progress');
+  if (!MOLTBOOK_CONFIG.api_key) { toast('Add Moltbook API key first', 'error'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Sweeping...';
+  progress.classList.remove('hidden'); progress.textContent = 'Fetching posts...';
+
+  try {
+    const interacted = getSweepInteracted();
+    const agentName = MOLTBOOK_CONFIG.agent_name || 'rk26';
+    let candidates = [];
+
+    // Fetch from all submolts
+    for (const sub of SWEEP_SUBMOLTS) {
+      try {
+        const r = await fetch(`${MOLTBOOK_CONFIG.base}/posts?submolt_name=${sub}&limit=20&sort=new`, {
+          headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}` },
+          signal: mkSignal(10000)
+        });
+        if (r.ok) {
+          const d = await r.json();
+          const posts = d.posts || d.data || [];
+          posts.forEach(p => {
+            if (p.author?.name !== agentName && !interacted.has(p.id)) {
+              candidates.push({ ...p, submolt: sub });
+            }
+          });
+          progress.textContent = `Found ${candidates.length} candidates so far (m/${sub} done)...`;
+        }
+      } catch(e) { /* skip failed submolt */ }
+    }
+
+    if (!candidates.length) {
+      progress.textContent = '✅ No new posts to interact with — all up to date!';
+      toast('No new posts found across submolts');
+      btn.disabled = false; btn.textContent = '🎯 Run Sweep';
+      return;
+    }
+
+    // Shuffle + take max 10
+    candidates = candidates.sort(() => Math.random() - 0.5).slice(0, 10);
+    let done = 0;
+
+    for (const post of candidates) {
+      progress.textContent = `Interacting ${done + 1}/${candidates.length}: "${(post.title || '').slice(0, 50)}..."`;
+
+      // 1. Upvote
+      try {
+        await fetch(`${MOLTBOOK_CONFIG.base}/posts/${post.id}/upvote`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}` },
+          signal: mkSignal(8000)
+        });
+      } catch(e) {}
+
+      // 2. AI Comment
+      const comment = await aiGetComment(post.title, post.content);
+      try {
+        await fetch(`${MOLTBOOK_CONFIG.base}/posts/${post.id}/comments`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: comment }),
+          signal: mkSignal(8000)
+        });
+      } catch(e) {}
+
+      interacted.add(post.id);
+      done++;
+
+      // Log to activity log
+      if (typeof AutoInteract !== 'undefined') {
+        AutoInteract.stats.comments++; AutoInteract.stats.likes++;
+        AutoInteract.log(`🎯 <span class="text-cyan-300 font-medium">m/${post.submolt}</span> @${post.author?.name || '?'} — 👍 + 💬 "${comment.slice(0,60)}..."`);
+        AutoInteract.updateStats();
+      }
+
+      await new Promise(r => setTimeout(r, 1200)); // 1.2s between interactions
+    }
+
+    saveSweepInteracted(interacted);
+    progress.textContent = `✅ Done! Interacted with ${done} posts across submolts.`;
+    toast(`✅ Sweep complete — ${done} posts engaged`);
+  } catch(e) {
+    progress.textContent = `❌ Error: ${e.message}`;
+    toast(`Sweep failed: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '🎯 Run Sweep';
+  }
+});
+
+// =====================================================================
+// AUTO SWEEP SCHEDULER (every 30 min)
+// =====================================================================
+let _autoSweepTimer = null;
+function scheduleAutoSweep() {
+  clearTimeout(_autoSweepTimer);
+  _autoSweepTimer = setTimeout(async () => {
+    if (MOLTBOOK_CONFIG.api_key) {
+      const btn = document.getElementById('submolt-sweep-btn');
+      if (btn && !btn.disabled) btn.click(); // trigger the sweep
+    }
+    scheduleAutoSweep(); // reschedule
+  }, 10 * 60 * 1000); // 10 minutes
+}
+// Start auto-sweep 2 min after page load (let things settle)
+setTimeout(scheduleAutoSweep, 2 * 60 * 1000);
+
+// =====================================================================
+// AGENT FACTORY
+// =====================================================================
+const FOCUS_PROMPTS = {
+  dubai_re:       'Dubai real estate investment analyst. Posts market insights, yield data, off-plan opportunities.',
+  ai_tech:        'AI & technology scout. Tracks ML breakthroughs and their impact on real-world investment.',
+  global_invest:  'Global investment strategist. Connects macro trends to emerging market opportunities.',
+  proptech:       'PropTech innovation agent. Bridges AI, blockchain, and physical real estate.',
+  uae_market:     'UAE market intelligence agent. Tracks Dubai, Abu Dhabi, and MENA investment flows.'
+};
+
+document.getElementById('factory-spawn-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('factory-spawn-btn');
+  const result = document.getElementById('factory-result');
+  const name = document.getElementById('factory-name')?.value.trim().replace(/\s+/g,'_').toLowerCase();
+  const desc = document.getElementById('factory-desc')?.value.trim();
+  const focus = document.getElementById('factory-focus')?.value;
+  const model = document.getElementById('factory-model')?.value || 'claude-haiku-4-5';
+  const schedule = document.getElementById('factory-schedule')?.value || '3x';
+  const platforms = [...document.querySelectorAll('.factory-platform:checked')].map(c => c.value);
+
+  if (!name) { toast('Enter an agent name', 'error'); return; }
+
+  btn.disabled = true; btn.textContent = '⚡ Building...';
+  result.classList.add('hidden');
+
+  const personality = FOCUS_PROMPTS[focus] || desc || 'A versatile AI agent that posts engaging content across platforms.';
+  const missionDesc = desc || personality;
+
+  // System prompt
+  const systemPrompt = `You are ${name}, an autonomous AI agent. ${personality}
+Your goals:
+1. Post high-value, engaging content daily across platforms
+2. Build audience through genuine insights and unique perspective
+3. Connect topics to real-world investment, technology, and human progress
+4. Always include a call-to-action or link when relevant
+Keep posts concise, authoritative, and authentic. Never spam. Quality over quantity.`;
+
+  // Cron schedule
+  const cronMap = {
+    '3x': ["'17 7 * * *'", "'43 13 * * *'", "'11 19 * * *'"],
+    '2x': ["'0 5 * * *'", "'0 14 * * *'"],
+    '1x': ["'0 7 * * *'"],
+    'hourly': ["'0 */2 * * *'"]
+  };
+  const crons = cronMap[schedule] || cronMap['3x'];
+  const cronLines = crons.map(c => `    - cron: ${c}`).join('\n');
+
+  // GitHub Actions workflow
+  const ghWorkflow = `name: ${name} Auto-Post\n\non:\n  schedule:\n${cronLines}\n  workflow_dispatch:\n\njobs:\n  post:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: '3.11'\n      - run: pip install requests anthropic\n      - run: python agent.py\n        env:\n          ANTHROPIC_API_KEY: \${{ secrets.ANTHROPIC_API_KEY }}\n          MOLTBOOK_API_KEY: \${{ secrets.MOLTBOOK_API_KEY }}`;
+
+  // Python agent script
+  const platformPosters = platforms.map(p => `    post_to_${p}(content)`).join('\n');
+  const pyScript = `"""${name} — Universal AI Agent\nMission: ${missionDesc}\nPlatforms: ${platforms.join(', ')}\n"""\nimport os, requests\n\nANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']\nMOLTBOOK_KEY = os.environ.get('MOLTBOOK_API_KEY', '')\n\nSYSTEM_PROMPT = """${systemPrompt.replace(/"/g,"'")}"""\n\ndef generate_post():\n    r = requests.post('https://api.anthropic.com/v1/messages',\n        headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},\n        json={'model': '${model}', 'max_tokens': 400, 'system': SYSTEM_PROMPT,\n              'messages': [{'role': 'user', 'content': 'Write today\\'s post. Be insightful, concise, engaging.'}]})\n    return r.json()['content'][0]['text'].strip()\n\ndef post_to_moltbook(content):\n    if not MOLTBOOK_KEY: return\n    requests.post('https://www.moltbook.com/api/v1/posts',\n        headers={'Authorization': f'Bearer {MOLTBOOK_KEY}', 'Content-Type': 'application/json'},\n        json={'submolt_name': 'general', 'title': content[:120], 'content': content})\n\ndef run():\n    content = generate_post()\n    print(f"Post: {content[:80]}...")\n${platformPosters}\n\nif __name__ == '__main__':\n    run()`;
+
+  // Try Moltbook registration if key present
+  let moltbookResult = '';
+  if (MOLTBOOK_CONFIG.api_key) {
+    try {
+      const r = await fetch(`${MOLTBOOK_CONFIG.base}/agents/register`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description: missionDesc, personality }),
+        signal: mkSignal(15000)
+      });
+      const d = await r.json();
+      if (r.ok && (d.api_key || d.agent?.api_key || d.id)) {
+        const key = d.api_key || d.agent?.api_key || '';
+        moltbookResult = `<div class="text-emerald-300 font-medium">✅ Registered on Moltbook!</div>
+        <div class="font-mono text-[10px] text-emerald-400 break-all mt-1">Key: ${key}</div>
+        <div class="text-[11px] text-slate-500">Profile: <a href="https://www.moltbook.com/u/${name}" target="_blank" class="text-blue-400">moltbook.com/u/${name}</a></div>`;
+      } else {
+        moltbookResult = `<div class="text-amber-400 text-[11px]">⚠️ Moltbook: ${(d.message||'register via dashboard').slice(0,80)}</div>`;
+      }
+    } catch(e) { moltbookResult = `<div class="text-slate-500 text-[11px]">Moltbook reg skipped: ${e.message}</div>`; }
+  }
+
+  result.innerHTML = `
+    <div class="text-emerald-300 font-bold text-[14px] mb-3">⚡ ${name} — Universal Agent Built</div>
+    ${moltbookResult}
+    <div class="mt-3 space-y-2">
+      <div class="text-slate-400 text-[11px] font-medium">📋 System Prompt:</div>
+      <pre class="bg-black/40 rounded-lg p-3 text-[10px] text-slate-300 overflow-auto max-h-[120px] whitespace-pre-wrap">${systemPrompt}</pre>
+      <div class="text-slate-400 text-[11px] font-medium mt-2">🐍 agent.py:</div>
+      <pre class="bg-black/40 rounded-lg p-3 text-[10px] text-slate-300 overflow-auto max-h-[160px] whitespace-pre-wrap font-mono">${pyScript.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+      <div class="text-slate-400 text-[11px] font-medium mt-2">⚙️ GitHub Actions (.github/workflows/post.yml):</div>
+      <pre class="bg-black/40 rounded-lg p-3 text-[10px] text-slate-300 overflow-auto max-h-[120px] whitespace-pre-wrap font-mono">${ghWorkflow}</pre>
+      <div class="text-[11px] text-slate-500 mt-2">📦 Deploy: put agent.py + workflow in a GitHub repo → add ANTHROPIC_API_KEY + MOLTBOOK_API_KEY secrets → auto-posts ${schedule} daily.</div>
+    </div>`;
+  result.classList.remove('hidden');
+  toast(`⚡ ${name} built! Copy agent.py + workflow to deploy.`);
+
+  btn.disabled = false; btn.textContent = '⚡ Build Universal Agent';
 });
 
 document.querySelectorAll('.hist-filter').forEach(btn => {
