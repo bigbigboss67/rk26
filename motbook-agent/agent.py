@@ -331,6 +331,83 @@ def search_posts(api_key: str, query: str, limit: int = 5) -> list:
         log.error("Search failed: %s", e)
         return []
 
+# ─── Multi-Platform Broadcasters ─────────────────────────────────────────────
+
+def post_to_telegram(token: str, chat_id: str, text: str):
+    if not token or not chat_id: return
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        requests.post(url, json={"chat_id": chat_id, "text": text}, timeout=10)
+        log.info("Posted to Telegram")
+    except Exception as e:
+        log.error("Telegram post failed: %s", e)
+
+def post_to_discord(webhook_url: str, text: str):
+    if not webhook_url: return
+    try:
+        requests.post(webhook_url, json={"content": text}, timeout=10)
+        log.info("Posted to Discord")
+    except Exception as e:
+        log.error("Discord post failed: %s", e)
+
+def post_to_slack(webhook_url: str, text: str):
+    if not webhook_url: return
+    try:
+        requests.post(webhook_url, json={"text": text}, timeout=10)
+        log.info("Posted to Slack")
+    except Exception as e:
+        log.error("Slack post failed: %s", e)
+
+def post_to_mastodon(instance: str, token: str, text: str):
+    if not instance or not token: return
+    try:
+        url = f"{instance.rstrip('/')}/api/v1/statuses"
+        requests.post(url, headers={"Authorization": f"Bearer {token}"}, json={"status": text}, timeout=10)
+        log.info("Posted to Mastodon")
+    except Exception as e:
+        log.error("Mastodon post failed: %s", e)
+
+def post_to_bluesky(handle: str, password: str, text: str):
+    if not handle or not password: return
+    try:
+        session_resp = requests.post(
+            "https://bsky.social/xrpc/com.atproto.server.createSession",
+            json={"identifier": handle, "password": password},
+            timeout=10
+        ).json()
+        access_token = session_resp.get("accessJwt")
+        did = session_resp.get("did")
+        if not access_token or not did: return
+        now = datetime.datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        record = {
+            "repo": did,
+            "collection": "app.bsky.feed.post",
+            "record": {
+                "$type": "app.bsky.feed.post",
+                "text": text,
+                "createdAt": now
+            }
+        }
+        requests.post(
+            "https://bsky.social/xrpc/com.atproto.repo.createRecord",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json=record,
+            timeout=10
+        )
+        log.info("Posted to Bluesky")
+    except Exception as e:
+        log.error("Bluesky post failed: %s", e)
+
+def broadcast_post(text: str, platforms: list = None):
+    if not platforms:
+        platforms = ["telegram", "discord", "slack", "mastodon", "bluesky"]
+    
+    if "telegram" in platforms: post_to_telegram(os.environ.get("TG_TOKEN"), os.environ.get("TG_CHAT_ID"), text)
+    if "discord" in platforms: post_to_discord(os.environ.get("DC_WEBHOOK"), text)
+    if "slack" in platforms: post_to_slack(os.environ.get("SL_WEBHOOK"), text)
+    if "mastodon" in platforms: post_to_mastodon(os.environ.get("MD_INSTANCE"), os.environ.get("MD_TOKEN"), text)
+    if "bluesky" in platforms: post_to_bluesky(os.environ.get("BSKY_HANDLE"), os.environ.get("BSKY_PASSWORD"), text)
+
 # ─── Autonomous behaviour ─────────────────────────────────────────────────────
 
 SAMPLE_THOUGHTS = [
@@ -395,6 +472,7 @@ def heartbeat(api_key: str):
             thought = random.choice(SAMPLE_THOUGHTS)
             title   = thought[:80].rstrip(",.")
             create_post(api_key, "general", title, thought)
+            broadcast_post(thought)
 
     except Exception as e:
         log.error("Heartbeat error: %s", e)
@@ -450,11 +528,23 @@ def cmd_status(_args):
 def cmd_post(args):
     creds = load_credentials()
     api_key = creds.get("api_key") or os.environ.get("MOLTBOOK_API_KEY")
-    if not api_key:
-        log.error("No API key. Run: python agent.py register")
-        return
-    ok = create_post(api_key, args.submolt, args.title, args.content or "")
-    print("✅ Posted!" if ok else "❌ Failed")
+    
+    platforms = [p.strip().lower() for p in args.platforms.split(",")] if args.platforms else ["all"]
+    do_all = "all" in platforms
+    
+    if do_all or "moltbook" in platforms:
+        if not api_key:
+            log.error("No API key for Moltbook. Skipping.")
+        else:
+            ok = create_post(api_key, args.submolt, args.title, args.content or "")
+            print("✅ Moltbook Posted!" if ok else "❌ Moltbook Failed")
+    
+    # Broadcast to other platforms
+    content_to_broadcast = args.content or args.title
+    if do_all:
+        broadcast_post(content_to_broadcast)
+    else:
+        broadcast_post(content_to_broadcast, platforms)
 
 def cmd_feed(args):
     creds = load_credentials()
@@ -524,6 +614,7 @@ def main():
     p_post.add_argument("title")
     p_post.add_argument("--submolt", default="general")
     p_post.add_argument("--content", default="")
+    p_post.add_argument("--platforms", default="all", help="Comma separated platforms (moltbook, telegram, discord, slack, mastodon, bluesky, all)")
 
     p_feed = sub.add_parser("feed", help="Show current feed")
     p_feed.add_argument("--sort",  default="hot")
