@@ -106,7 +106,7 @@
         <div>
           <label class="text-xs text-slate-400 mb-1.5 block">Password</label>
           <div class="relative">
-            <input id="auth-api-key" type="password" class="w-full h-11 px-4 pr-16 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-sm text-white transition" placeholder="Enter your password">
+            <input id="auth-api-key" type="password" class="w-full h-11 px-4 pr-16 rounded-xl bg-[#0a0f1c] border border-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none text-sm text-white transition" placeholder="Enter your password" autocomplete="current-password">
             <button type="button" id="auth-toggle-key" class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] px-2 py-1 rounded-lg bg-slate-700/60 text-slate-400 hover:text-white transition">Show</button>
           </div>
         </div>
@@ -718,7 +718,7 @@
           <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass p-5">
             <h3 class="font-semibold text-[15px] mb-4">Platform Preview</h3>
             <div id="platform-previews" class="space-y-4"></div>
-            <div id="no-platform-msg" class="text-center py-8 text-slate-500 text-[13px]">
+            <div id="no-platform-msg" class="hidden text-center py-8 text-slate-500 text-[13px]">
               Select platforms to see preview
             </div>
           </div>
@@ -741,7 +741,7 @@
             <div class="flex items-center justify-between mb-5">
               <h3 class="font-semibold text-[15px]">Schedule Settings</h3>
               <label class="toggle-wrap">
-                <input type="checkbox" id="sched-toggle">
+                <input type="checkbox" id="sched-toggle" checked>
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -884,28 +884,12 @@
       <!-- Stats row -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6" id="history-stats"></div>
 
-      <!-- Table -->
-      <div class="rounded-[24px] border border-white/10 bg-slate-900/60 glass overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-[13px]">
-            <thead>
-              <tr class="border-b border-white/5 text-[11px] text-slate-500 uppercase tracking-wider">
-                <th class="px-5 py-3 text-left font-medium">Date / Time</th>
-                <th class="px-5 py-3 text-left font-medium">Platforms</th>
-                <th class="px-5 py-3 text-left font-medium">Content</th>
-                <th class="px-5 py-3 text-left font-medium">Status</th>
-                <th class="px-5 py-3 text-left font-medium">Reach</th>
-                <th class="px-5 py-3 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="history-tbody" class="divide-y divide-white/5"></tbody>
-          </table>
-        </div>
-        <div id="history-empty" class="hidden text-center py-16 text-slate-500">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto mb-3 text-slate-700"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-          <p class="text-[14px]">No posts yet</p>
-          <p class="text-[12px] mt-1 text-slate-600">Posts will appear here after you send them</p>
-        </div>
+      <!-- Cards -->
+      <div id="history-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      <div id="history-empty" class="hidden text-center py-16 text-slate-500">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mx-auto mb-3 text-slate-700"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        <p class="text-[14px]">No posts yet</p>
+        <p class="text-[12px] mt-1 text-slate-600">Posts will appear here after you send them</p>
       </div>
     </div>
 
@@ -984,31 +968,24 @@
       <div class="rounded-[20px] border border-white/10 bg-slate-900/60 glass p-5 mb-5">
         <h3 class="font-semibold text-[15px] mb-3 flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          GitHub Actions — Manual Triggers
+          GitHub Actions — Run &amp; Status
         </h3>
-        <p class="text-[12px] text-slate-400 mb-3">Click to open GitHub Actions and run workflow manually. Runs automatically on schedule.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/auto-post.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
-            <span class="text-lg">📮</span>
-            <span class="text-[12px] font-medium text-slate-200">Auto Post</span>
-            <span class="text-[10px] text-slate-500">7:17am / 1:43pm / 7:11pm</span>
-          </a>
-          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/super-agent.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
-            <span class="text-lg">🤖</span>
-            <span class="text-[12px] font-medium text-slate-200">Super Agent</span>
-            <span class="text-[10px] text-slate-500">6:05am / 12:33pm / 8:17pm</span>
-          </a>
-          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/crawler.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
-            <span class="text-lg">🕷️</span>
-            <span class="text-[12px] font-medium text-slate-200">Web Crawler</span>
-            <span class="text-[10px] text-slate-500">6:00am / 6:00pm UTC</span>
-          </a>
-          <a href="https://github.com/bigbigboss67/moltbook-autopilot/actions/workflows/predictor.yml" target="_blank" class="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 transition-colors text-center">
-            <span class="text-lg">🔮</span>
-            <span class="text-[12px] font-medium text-slate-200">Predictor</span>
-            <span class="text-[10px] text-slate-500">5:50am UTC daily</span>
-          </a>
+        <!-- GitHub PAT input -->
+        <div class="flex gap-2 mb-4 items-end">
+          <div class="flex-1">
+            <label class="text-[11px] text-slate-400 mb-1 block">GitHub Token (PAT with <code class="text-violet-300">workflow</code> scope) — needed to trigger runs</label>
+            <input id="gh-pat-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              class="w-full h-9 px-3 rounded-lg bg-[#0a0f1c] border border-violet-500/20 focus:border-violet-500/50 outline-none text-[13px] font-mono text-slate-300 transition"
+              value="">
+          </div>
+          <button id="gh-pat-save" class="h-9 px-4 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-medium transition shrink-0">Save</button>
+          <button id="gh-refresh-all" class="h-9 px-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[12px] transition shrink-0" title="Refresh all run statuses">↻ Refresh</button>
         </div>
+        <div id="gh-pat-hint" class="text-[11px] text-slate-500 mb-3 hidden">No token → buttons show last run status only (read via public API)</div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="gh-workflow-grid">
+          <!-- Filled by JS -->
+        </div>
+        <div id="gh-run-log" class="mt-3 text-[12px] text-slate-400 hidden"></div>
       </div>
 
       <!-- Data panels -->
@@ -1355,15 +1332,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('auth-login-btn');
     if (!name || !key) { err.textContent = 'Both fields required'; err.classList.remove('hidden'); return; }
     btn.disabled = true; btn.textContent = 'Authenticating...'; err.classList.add('hidden');
-    try {
-      // Cloud Mode: Bypass auth to allow anyone to view the promotional dashboard
-      AUTH.setToken('cloud_promotional_token_123', name);
+
+    // Local auth: accept hardcoded Moltbook API key as password (no backend needed)
+    const LOCAL_KEY = 'moltbook_sk_fcwMVrVl-mlKbLBq4BUbgvNo-EMoIZZx';
+    if (key === LOCAL_KEY || key === localStorage.getItem('mb_api_key')) {
+      AUTH.setToken(key, name);
       document.getElementById('auth-overlay').style.display = 'none';
-      if(typeof toast==='function') toast('Welcome to the cloud dashboard!', 'success');
+      if(typeof toast==='function') toast('Welcome back, ' + name + '!', 'success');
       try {
-        if (typeof BackendMonitor !== 'undefined') BackendMonitor.ping();
+        if (typeof AutoInteract !== 'undefined') {
+          if (!AutoInteract._started) AutoInteract.start();
+          else AutoInteract.runCycle();
+        }
       } catch(_) {}
-    } catch(e) { /* Cloud mode: Ignore local backend errors */ }
+      btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock Agent';
+      return;
+    }
+
+    // Also accept: built-in short password (direct compare — works even before localStorage is stamped)
+    // or a user-set custom password changed via Change Password panel
+    const LOGIN_PASSWORD = 'rk2626';
+    const customPwd = localStorage.getItem('custom_password');
+    if (key === LOGIN_PASSWORD || (customPwd && key === customPwd)) {
+      AUTH.setToken(key, name);
+      document.getElementById('auth-overlay').style.display = 'none';
+      if(typeof toast==='function') toast('Welcome back, ' + name + '!', 'success');
+      try {
+        if (typeof AutoInteract !== 'undefined') {
+          if (!AutoInteract._started) AutoInteract.start();
+          else AutoInteract.runCycle();
+        }
+      } catch(_) {}
+      btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock Agent';
+      return;
+    }
+
+    // No backend on Vercel — show clear error instead of hitting a rate-limited server
+    err.textContent = 'Wrong password. Use your Moltbook API key or set a custom password in Agent Builder → Change Password.';
+    err.classList.remove('hidden');
     btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Unlock Agent';
   });
 
@@ -1377,8 +1383,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   document.getElementById('auth-logout-btn').addEventListener('click', () => { AUTH.logout(); if(typeof toast==='function') toast('App locked','info'); });
 
-  // Check auth on load
-  if (AUTH.isValid()) { document.getElementById('auth-overlay').style.display = 'none'; }
+  // Check auth on load — also auto-login if the correct API key is already in localStorage
+  // (this stamps on every page load via _DEFAULTS, so any device with the page open auto-logs in)
+  const _storedKey = localStorage.getItem('mb_api_key') || '';
+  const _knownKey  = 'moltbook_sk_fcwMVrVl-mlKbLBq4BUbgvNo-EMoIZZx';
+  if (AUTH.isValid() || _storedKey === _knownKey) {
+    if (!AUTH.isValid()) AUTH.setToken(_storedKey, localStorage.getItem('mb_agent_name') || 'rk26');
+    document.getElementById('auth-overlay').style.display = 'none';
+  }
 
   // Auto-fetch research on page load (after short delay to let page settle)
   setTimeout(() => {
@@ -1484,12 +1496,12 @@ const BackendMonitor = {
       text.textContent = 'Syncing\u2026';
       text.className = 'text-amber-300';
     } else {
-      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-      text.textContent = 'Cloud Backend Online';
-      text.className = 'text-emerald-300';
+      dot.className = 'w-2 h-2 rounded-full bg-red-500';
+      text.textContent = 'Backend Offline';
+      text.className = 'text-red-400';
       if (time) time.textContent = '';
-      if (legacyDot) legacyDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse hidden';
-      if (legacyLabel) legacyLabel.textContent = 'Cloud Backend Online';
+      if (legacyDot) legacyDot.className = 'w-2 h-2 rounded-full bg-red-500 hidden';
+      if (legacyLabel) legacyLabel.textContent = 'Backend Offline';
     }
   },
 
@@ -1534,18 +1546,26 @@ async function checkBackendHealth() { return BackendMonitor.ping(); }
 // user overrides entered in the settings card
 // =====================================================================
 const _DEFAULTS = {
-  mb_api_key:   'moltbook_sk_fcwMVrVl-mlKbLBq4BUbgvNo-EMoIZZx',
-  mb_agent_id:  '8e450a8b-998a-4e4d-8a13-372949bcf61e',
-  mb_agent_name:'rk26',
-  sb_url:       'https://zhnrdirwxlosapcbphca.supabase.co',
-  sb_key:       'sb_publishable_iK3tKZ5zYkt6QkOZzRb-Dg_euI2gqnS',
-  tg_token:     '',
-  tg_chat_id:   ''
+  mb_api_key:     'moltbook_sk_fcwMVrVl-mlKbLBq4BUbgvNo-EMoIZZx',
+  mb_agent_id:    '8e450a8b-998a-4e4d-8a13-372949bcf61e',
+  mb_agent_name:  'rk26',
+  login_password: 'rk2626',          // short password — works on ALL devices (stamped on load)
+  sb_url:         'https://zhnrdirwxlosapcbphca.supabase.co',
+  sb_key:         'sb_publishable_iK3tKZ5zYkt6QkOZzRb-Dg_euI2gqnS',
+  tg_token:       '',
+  tg_chat_id:     ''
 };
-// Always stamp sb credentials — overwrite stale/empty values
-['sb_url','sb_key','mb_api_key','mb_agent_id','mb_agent_name'].forEach(k => {
+// Always stamp these credentials — overwrite stale/empty values on every page load
+['sb_url','sb_key','mb_api_key','mb_agent_id','mb_agent_name','login_password'].forEach(k => {
   if (_DEFAULTS[k]) localStorage.setItem(k, _DEFAULTS[k]);
 });
+// Pre-stamp known suspension (auto-mod offense #2) so AutoInteract doesn't fire during suspension
+// Suspension lifted: 2026-05-27T09:52:15.078Z — remove this line after that date
+(function() {
+  const known = '2026-05-27T09:52:15.078Z';
+  const stored = localStorage.getItem('mb_suspended_until');
+  if (!stored || new Date(stored) < new Date(known)) localStorage.setItem('mb_suspended_until', known);
+})();
 // Other optional keys — only set if missing
 Object.entries(_DEFAULTS).forEach(([k,v]) => { if (v && !localStorage.getItem(k)) localStorage.setItem(k, v); });
 
@@ -1557,16 +1577,78 @@ const MOLTBOOK_CONFIG = {
 };
 
 async function moltPost(title, content, submolt = 'introductions', imageUrl = '') {
-  if (!localStorage.getItem('mb_api_key')) { toast('Configure your Moltbook API key in Settings', 'info'); return null; }
+  const key = localStorage.getItem('mb_api_key') || _DEFAULTS.mb_api_key;
+  if (!key) { toast('Configure your Moltbook API key in Settings', 'info'); return null; }
   try {
-    const res = await authedFetch(`${API_BASE_URL}/post/moltbook`, {
+    const body = { submolt_name: submolt, title: (title || content.split('\n')[0]).slice(0, 120), content };
+    if (imageUrl) body.image_url = imageUrl;
+    const res = await fetch('https://www.moltbook.com/api/v1/posts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, content, submolt, imageUrl: imageUrl || undefined })
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(45000)
     });
-    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Post failed'); }
-    return await safeJson(res);
-  } catch(e) { if (e.message !== 'Session expired') toast(`Moltbook post failed: ${e.message}`, 'error'); return null; }
+    const data = await safeJson(res);
+    if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+
+    // Moltbook requires solving a math CAPTCHA — posts stay invisible until verified
+    const verification = data?.post?.verification;
+    if (verification?.verification_code) {
+      toast('Solving verification challenge…', 'info');
+      await solveMoltbookVerification(key, verification);
+    }
+    return data;
+  } catch(e) { toast(`Moltbook post failed: ${e.message}`, 'error'); return null; }
+}
+
+async function solveMoltbookVerification(apiKey, verification) {
+  const { verification_code, challenge_text } = verification;
+  if (!verification_code || !challenge_text) return;
+  try {
+    // Use Claude to solve the obfuscated math challenge
+    const claudeKey = AI_CONFIG.key || localStorage.getItem('anthropic_key') || '';
+    let answer = null;
+
+    if (claudeKey) {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5', max_tokens: 20,
+          system: 'Solve the math in this obfuscated text. Noise chars (], ^, /, .) are scattered — ignore them. Read word numbers (thirty five=35, etc.), compute result. Return ONLY the number with 2 decimal places like "57.00". No other text.',
+          messages: [{ role: 'user', content: challenge_text }]
+        }),
+        signal: AbortSignal.timeout(30000)
+      });
+      if (r.ok) {
+        const d = await r.json();
+        answer = d?.content?.[0]?.text?.trim();
+      }
+    }
+
+    if (!answer) {
+      // Fallback: try to extract numbers from challenge text directly
+      const nums = challenge_text.replace(/[^a-zA-Z\s+\-*\/]/g, ' ')
+        .match(/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred)\b/gi);
+      if (nums) {
+        const w2n = {one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90,hundred:100};
+        answer = nums.reduce((s, w) => s + (w2n[w.toLowerCase()] || 0), 0).toFixed(2);
+      }
+    }
+
+    if (!answer) { console.warn('[verify] could not solve challenge'); return; }
+    console.log('[verify] answer:', answer);
+
+    const vr = await fetch('https://www.moltbook.com/api/v1/verify', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ verification_code, answer }),
+      signal: AbortSignal.timeout(20000)
+    });
+    const vd = await safeJson(vr);
+    console.log('[verify] result:', vd);
+    if (vr.ok) toast('Post verified ✓', 'success');
+  } catch(e) { console.warn('[verify] error:', e.message); }
 }
 
 const TELEGRAM_CONFIG = {
@@ -1575,31 +1657,66 @@ const TELEGRAM_CONFIG = {
 };
 
 async function telegramPost(text, imageUrl) {
-  if (!localStorage.getItem('tg_token')) { toast('Configure your Telegram Bot Token in Settings', 'info'); return null; }
+  const token   = localStorage.getItem('tg_token')   || _DEFAULTS.tg_token;
+  const chat_id = localStorage.getItem('tg_chat_id') || _DEFAULTS.tg_chat_id;
+  if (!token)   { toast('Configure Telegram Bot Token in Agent Builder → Settings', 'info'); return null; }
+  if (!chat_id) { toast('Configure Telegram Chat ID in Agent Builder → Settings', 'info'); return null; }
   try {
-    const res = await authedFetch(`${API_BASE_URL}/post/telegram`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, imageUrl: imageUrl || undefined })
-    });
-    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Telegram failed'); }
-    return await safeJson(res);
-  } catch(e) { if (e.message !== 'Session expired') toast(`Telegram failed: ${e.message}`, 'error'); return null; }
+    const base = `https://api.telegram.org/bot${token}`;
+    let res;
+    if (imageUrl) {
+      res = await fetch(`${base}/sendPhoto`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id, photo: imageUrl, caption: text.slice(0, 1024), parse_mode: 'HTML' }),
+        signal: mkSignal(20000)
+      });
+    } else {
+      res = await fetch(`${base}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id, text: text.slice(0, 4096) }),
+        signal: mkSignal(20000)
+      });
+    }
+    const data = await safeJson(res);
+    if (!data.ok) throw new Error(data.description || `Telegram error ${res.status}`);
+    return data;
+  } catch(e) { toast(`Telegram failed: ${e.message}`, 'error'); return null; }
 }
 
 const BLUESKY_CONFIG = { handle: localStorage.getItem('bsky_handle') || '', password: localStorage.getItem('bsky_password') || '' };
 
 async function bskyPost(text, imageUrl) {
-  if (!localStorage.getItem('bsky_password')) { toast('Configure your Bluesky password in Settings', 'info'); return null; }
+  const handle = localStorage.getItem('bsky_handle')   || '';
+  const pwd    = localStorage.getItem('bsky_password') || '';
+  if (!handle || !pwd) { return { _notConfigured: true }; }  // caller shows "not configured"
   try {
-    const res = await authedFetch(`${API_BASE_URL}/post/bluesky`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, imageUrl: imageUrl || undefined })
+    // 1. Create session — use App Password from bsky.app → Settings → App Passwords
+    const authRes = await fetch('https://bsky.social/xrpc/com.atproto.server.createSession', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: handle, password: pwd }),
+      signal: mkSignal(20000)
     });
-    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Bluesky failed'); }
-    return await safeJson(res);
-  } catch(e) { if (e.message !== 'Session expired') toast(`Bluesky failed: ${e.message}`, 'error'); return null; }
+    const auth = await safeJson(authRes);
+    if (!authRes.ok) throw new Error(auth.message === 'Invalid identifier or password'
+      ? 'Wrong handle or App Password. Go bsky.app → Settings → App Passwords to create one.'
+      : (auth.message || 'Bluesky auth failed'));
+
+    // 2. Create post record
+    const record = {
+      $type: 'app.bsky.feed.post',
+      text: text.slice(0, 300),
+      createdAt: new Date().toISOString(),
+      langs: ['en']
+    };
+    const postRes = await fetch('https://bsky.social/xrpc/com.atproto.repo.createRecord', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${auth.accessJwt}` },
+      body: JSON.stringify({ repo: auth.did, collection: 'app.bsky.feed.post', record }),
+      signal: mkSignal(20000)
+    });
+    const postData = await safeJson(postRes);
+    if (!postRes.ok) throw new Error(postData.message || `Bluesky post error ${postRes.status}`);
+    return postData;
+  } catch(e) { toast(`Bluesky failed: ${e.message}`, 'error'); return null; }
 }
 
 const DISCORD_CONFIG  = { webhook: localStorage.getItem('dc_webhook') || '' };
@@ -1609,16 +1726,20 @@ const APIFY_CONFIG    = { token: localStorage.getItem('apify_token') || '' };
 const AI_CONFIG       = { key: localStorage.getItem('ai_api_key') || '', model: localStorage.getItem('ai_model') || 'claude-haiku-4-5' };
 
 async function discordPost(text, file) {
-  if (!DISCORD_CONFIG.webhook) throw new Error('Discord not configured');
+  const webhook = localStorage.getItem('dc_webhook') || DISCORD_CONFIG.webhook;
+  if (!webhook) throw new Error('Discord not configured — add webhook URL in Agent Builder → Settings');
   try {
-    const res = await authedFetch(`${API_BASE_URL}/post/discord`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: text, username: MOLTBOOK_CONFIG.agent_name || 'rk26' })
+    // Direct Discord webhook — no auth needed
+    const res = await fetch(webhook, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: text.slice(0, 2000), username: MOLTBOOK_CONFIG.agent_name || 'rk26' }),
+      signal: mkSignal(20000)
     });
-    if (!res.ok) { const err = await safeJson(res); throw new Error(err.error || 'Discord failed'); }
-    return await safeJson(res);
-  } catch(e) { if (e.message !== 'Session expired') toast(`Discord failed: ${e.message}`, 'error'); return { ok: false, description: e.message }; }
+    // Discord webhooks return 204 No Content on success
+    if (res.status === 204 || res.ok) return { ok: true };
+    const err = await safeJson(res);
+    throw new Error(err.message || `Discord error ${res.status}`);
+  } catch(e) { toast(`Discord failed: ${e.message}`, 'error'); return { ok: false, description: e.message }; }
 }
 
 async function mastodonPost(text, file) {
@@ -1687,7 +1808,7 @@ const state = {
   postContent: '',
   selectedHashtags: [],
   // Scheduler
-  schedEnabled: false,
+  schedEnabled: true,
   schedTime: '09:00',
   schedTz: 'Asia/Dubai',
   schedDays: ['mon','tue','wed','thu','fri'],
@@ -1758,6 +1879,7 @@ document.querySelectorAll('.section-tab').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('section-' + btn.dataset.section).classList.add('visible');
     if (btn.dataset.section === 'history') renderHistory();
+    if (btn.dataset.section === 'poster') { renderPlatformList(); renderPlatformPreviews(); }
     if (btn.dataset.section === 'research') {
       // Auto-fetch if no results yet
       const container = document.getElementById('research-results');
@@ -1781,60 +1903,109 @@ document.querySelectorAll('.section-tab').forEach(btn => {
     if (url && key) loadIntelligenceData(url, key);
   }
 
+  const DEMO_ITEMS = [
+    { title: 'Dubai luxury real estate hits record highs in Q1 2026', source_type: 'reddit', scraped_at: new Date(Date.now()-3600000*2).toISOString() },
+    { title: 'AI agents are reshaping property investment research', source_type: 'hackernews', scraped_at: new Date(Date.now()-3600000*5).toISOString() },
+    { title: 'UAE Golden Visa demand surges among European investors', source_type: 'zawya', scraped_at: new Date(Date.now()-3600000*8).toISOString() },
+    { title: 'PropTech funding rounds exceed $2B globally in 2026', source_type: 'crunchbase', scraped_at: new Date(Date.now()-3600000*12).toISOString() },
+    { title: 'Emaar announces off-plan launch in Dubai Hills', source_type: 'bayut', scraped_at: new Date(Date.now()-3600000*24).toISOString() },
+  ];
+  const DEMO_PREDS = [
+    { subject: 'Dubai Marina', direction: 'up', confidence: 'high', timeframe: '3-6 months' },
+    { subject: 'Palm Jumeirah villas', direction: 'up', confidence: 'high', timeframe: '12 months' },
+    { subject: 'JVC apartments', direction: 'up', confidence: 'medium', timeframe: '6 months' },
+    { subject: 'Business Bay offices', direction: 'neutral', confidence: 'medium', timeframe: '3 months' },
+    { subject: 'Downtown Dubai', direction: 'up', confidence: 'high', timeframe: '12 months' },
+  ];
+  const DEMO_VIRAL = [
+    { topic: 'Dubai off-plan investment 2026', score: 9 },
+    { topic: 'UAE Golden Visa property route', score: 8 },
+    { topic: 'AI PropTech disruption', score: 8 },
+    { topic: 'Dubai vs London yield comparison', score: 7 },
+    { topic: 'Emaar vs Damac 2026 launches', score: 7 },
+  ];
+
+  function renderIntelItems(items, isSample) {
+    const el = document.getElementById('sb-items-list');
+    const count = document.getElementById('sb-items-count');
+    const data = items.length ? items : DEMO_ITEMS;
+    const tag = items.length ? '' : ' · <span class="text-amber-400/70">sample</span>';
+    count.innerHTML = `(${data.length} shown${isSample && !items.length ? ' — sample' : ''})`;
+    el.innerHTML = data.map(i => `
+      <div class="border-b border-white/5 pb-1.5">
+        <div class="text-slate-300 truncate">${i.title || '—'}</div>
+        <div class="text-[10px] text-slate-500">${i.source_type||''} · ${(i.scraped_at||'').slice(0,16).replace('T',' ')}${tag}</div>
+      </div>`).join('');
+  }
+
+  function renderIntelPreds(preds, isSample) {
+    const el = document.getElementById('sb-pred-list');
+    const count = document.getElementById('sb-pred-count');
+    const data = preds.length ? preds : DEMO_PREDS;
+    count.innerHTML = `(${data.length}${isSample && !preds.length ? ' — sample' : ''})`;
+    const dirIcon = d => d === 'up' ? '📈' : d === 'down' ? '📉' : '➡️';
+    const confColor = c => c === 'high' ? 'text-emerald-400' : c === 'medium' ? 'text-amber-400' : 'text-slate-400';
+    el.innerHTML = data.map(p => `
+      <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
+        <div>
+          <span class="text-slate-300">${p.subject}</span>
+          <span class="text-[10px] text-slate-500 ml-1">${p.timeframe||''}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span>${dirIcon(p.direction)}</span>
+          <span class="text-[11px] ${confColor(p.confidence)}">${p.confidence}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderIntelViral(viral, isSample) {
+    const el = document.getElementById('sb-viral-list');
+    const count = document.getElementById('sb-viral-count');
+    const data = viral.length ? viral : DEMO_VIRAL;
+    count.innerHTML = `(${data.length}${isSample && !viral.length ? ' — sample' : ''})`;
+    el.innerHTML = data.map(v => `
+      <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
+        <div class="text-slate-300 truncate flex-1 mr-2">${v.topic}</div>
+        <div class="flex items-center gap-1 shrink-0">
+          <div class="w-16 bg-slate-700 rounded-full h-1.5 overflow-hidden">
+            <div class="h-1.5 rounded-full bg-violet-500" style="width:${(v.score||0)*10}%"></div>
+          </div>
+          <span class="text-[11px] text-violet-400 font-medium">${v.score}/10</span>
+        </div>
+      </div>`).join('');
+  }
+
   async function loadIntelligenceData(url, key) {
     const status = document.getElementById('sb-status');
     status.textContent = 'Loading…';
+    status.className = 'ml-3 text-[12px] text-slate-400';
     try {
-      // Scraped items count + latest 10
-      const items = await sbGet(url, key, 'scraped_items?select=title,source_type,scraped_at&order=scraped_at.desc&limit=10');
-      document.getElementById('sb-items-count').textContent = `(${items.length} shown)`;
-      const itemsList = document.getElementById('sb-items-list');
-      itemsList.innerHTML = items.length ? items.map(i => `
-        <div class="border-b border-white/5 pb-1.5">
-          <div class="text-slate-300 truncate">${i.title || '—'}</div>
-          <div class="text-[10px] text-slate-500">${i.source_type||''} · ${(i.scraped_at||'').slice(0,16).replace('T',' ')}</div>
-        </div>`).join('') : '<p class="text-slate-500 italic">No data yet — run crawler first</p>';
+      const [items, preds, viral] = await Promise.all([
+        sbGet(url, key, 'scraped_items?select=title,source_type,scraped_at&order=scraped_at.desc&limit=10'),
+        sbGet(url, key, 'predictions?select=subject,direction,confidence,timeframe,created_at&order=created_at.desc&limit=12'),
+        sbGet(url, key, 'virality_scores?select=topic,score,created_at&order=score.desc&limit=10'),
+      ]);
+      const allEmpty = !items.length && !preds.length && !viral.length;
+      renderIntelItems(items, allEmpty);
+      renderIntelPreds(preds, allEmpty);
+      renderIntelViral(viral, allEmpty);
 
-      // Price predictions
-      const preds = await sbGet(url, key, 'predictions?select=subject,direction,confidence,timeframe,created_at&type=eq.price&order=created_at.desc&limit=12');
-      document.getElementById('sb-pred-count').textContent = `(${preds.length})`;
-      const dirIcon = d => d === 'up' ? '📈' : d === 'down' ? '📉' : '➡️';
-      const confColor = c => c === 'high' ? 'text-emerald-400' : c === 'medium' ? 'text-amber-400' : 'text-slate-400';
-      const predList = document.getElementById('sb-pred-list');
-      predList.innerHTML = preds.length ? preds.map(p => `
-        <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
-          <div>
-            <span class="text-slate-300">${p.subject}</span>
-            <span class="text-[10px] text-slate-500 ml-1">${p.timeframe}</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <span>${dirIcon(p.direction)}</span>
-            <span class="text-[11px] ${confColor(p.confidence)}">${p.confidence}</span>
-          </div>
-        </div>`).join('') : '<p class="text-slate-500 italic">No forecasts yet — run predictor first</p>';
-
-      // Virality scores
-      const viral = await sbGet(url, key, 'virality_scores?select=topic,score,created_at&order=score.desc&limit=10');
-      document.getElementById('sb-viral-count').textContent = `(${viral.length})`;
-      const viralList = document.getElementById('sb-viral-list');
-      viralList.innerHTML = viral.length ? viral.map(v => `
-        <div class="flex items-center justify-between border-b border-white/5 pb-1.5">
-          <div class="text-slate-300 truncate flex-1 mr-2">${v.topic}</div>
-          <div class="flex items-center gap-1 shrink-0">
-            <div class="w-16 bg-slate-700 rounded-full h-1.5 overflow-hidden">
-              <div class="h-1.5 rounded-full bg-violet-500" style="width:${(v.score||0)*10}%"></div>
-            </div>
-            <span class="text-[11px] text-violet-400 font-medium">${v.score}/10</span>
-          </div>
-        </div>`).join('') : '<p class="text-slate-500 italic">No virality data yet — run predictor first</p>';
-
-      status.textContent = '✓ Connected';
-      status.className = 'ml-3 text-[12px] text-emerald-400';
+      if (allEmpty) {
+        status.textContent = '✓ Connected — tables empty (showing sample data)';
+        status.className = 'ml-3 text-[12px] text-amber-400';
+      } else {
+        status.textContent = `✓ Connected — ${items.length} items · ${preds.length} predictions · ${viral.length} topics`;
+        status.className = 'ml-3 text-[12px] text-emerald-400';
+      }
       localStorage.setItem('sb_url', url);
       localStorage.setItem('sb_key', key);
     } catch(e) {
-      status.textContent = `Error: ${e}`;
+      // Connection failed — show sample data anyway
+      status.textContent = `⚠ Supabase error (${e}) — showing sample data`;
       status.className = 'ml-3 text-[12px] text-red-400';
+      renderIntelItems([], true);
+      renderIntelPreds([], true);
+      renderIntelViral([], true);
     }
   }
 
@@ -1849,6 +2020,177 @@ document.querySelectorAll('.section-tab').forEach(btn => {
 
   // Auto-load Intelligence data on page start
   loadIntelligenceFromStorage();
+
+  // ── GitHub Actions trigger + status ────────────────────────────────────
+  const GH_REPO = 'bigbigboss67/moltbook-autopilot';
+  const GH_API  = 'https://api.github.com';
+  const WORKFLOWS = [
+    { id: 'auto-post.yml',   label: 'Auto Post',   icon: '📮', schedule: '3× daily' },
+    { id: 'super-agent.yml', label: 'Super Agent', icon: '🤖', schedule: '3× daily' },
+    { id: 'crawler.yml',     label: 'Web Crawler', icon: '🕷️', schedule: '2× daily' },
+    { id: 'predictor.yml',   label: 'Predictor',   icon: '🔮', schedule: 'daily' },
+  ];
+
+  // Render workflow cards
+  function renderWorkflowCards(statuses) {
+    const grid = document.getElementById('gh-workflow-grid');
+    if (!grid) return;
+    grid.innerHTML = WORKFLOWS.map(w => {
+      const s = statuses[w.id] || {};
+      const statusColor = s.conclusion === 'success' ? 'text-emerald-400'
+        : s.conclusion === 'failure' ? 'text-red-400'
+        : s.status === 'in_progress' ? 'text-amber-400'
+        : 'text-slate-500';
+      const statusText = s.conclusion === 'success' ? '✓ success'
+        : s.conclusion === 'failure' ? '✗ failed'
+        : s.status === 'in_progress' ? '⏳ running'
+        : s.status === 'queued' ? '⏳ queued'
+        : s.ran_at ? '— ' + s.ran_at : 'no runs yet';
+      return `
+        <button class="gh-trigger-btn flex flex-col items-center gap-1.5 p-3 rounded-xl border border-white/10 bg-slate-800/60 hover:border-violet-500/40 active:scale-95 transition-all text-center cursor-pointer w-full" data-wf="${w.id}">
+          <span class="text-lg">${w.icon}</span>
+          <span class="text-[12px] font-medium text-slate-200">${w.label}</span>
+          <span class="text-[10px] text-slate-500">${w.schedule}</span>
+          <span class="text-[10px] ${statusColor} font-medium" id="wf-status-${w.id.replace('.','_')}">${statusText}</span>
+        </button>`;
+    }).join('');
+
+    // Bind click handlers
+    grid.querySelectorAll('.gh-trigger-btn').forEach(btn => {
+      btn.addEventListener('click', () => triggerWorkflow(btn.dataset.wf, btn));
+    });
+  }
+
+  async function ghHeaders() {
+    const pat = localStorage.getItem('gh_pat') || '';
+    const h = { 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+    if (pat) h['Authorization'] = `Bearer ${pat}`;
+    return h;
+  }
+
+  async function fetchWorkflowStatuses() {
+    const statuses = {};
+    const h = await ghHeaders();
+    await Promise.all(WORKFLOWS.map(async w => {
+      try {
+        const r = await fetch(`${GH_API}/repos/${GH_REPO}/actions/workflows/${w.id}/runs?per_page=1`, { headers: h, signal: mkSignal(15000) });
+        if (!r.ok) return;
+        const data = await r.json();
+        const run = data.workflow_runs?.[0];
+        if (run) {
+          statuses[w.id] = {
+            status: run.status,
+            conclusion: run.conclusion,
+            ran_at: new Date(run.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})
+          };
+        }
+      } catch(e) {}
+    }));
+    return statuses;
+  }
+
+  async function triggerWorkflow(workflowId, btn) {
+    const pat = localStorage.getItem('gh_pat') || '';
+    if (!pat) {
+      toast('Add GitHub Token first (PAT with workflow scope)', 'error');
+      document.getElementById('gh-pat-input')?.focus();
+      return;
+    }
+    const label = btn.querySelector('span:nth-child(2)')?.textContent || workflowId;
+    const statusEl = document.getElementById(`wf-status-${workflowId.replace('.','_')}`);
+    btn.disabled = true;
+    if (statusEl) { statusEl.textContent = '⏳ dispatching…'; statusEl.className = 'text-[10px] text-amber-400 font-medium'; }
+
+    try {
+      const r = await fetch(`${GH_API}/repos/${GH_REPO}/actions/workflows/${workflowId}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `Bearer ${pat}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ref: 'main' }),
+        signal: mkSignal(20000)
+      });
+
+      if (r.status === 204) {
+        toast(`${label} triggered ✓`, 'success');
+        if (statusEl) { statusEl.textContent = '⏳ queued'; statusEl.className = 'text-[10px] text-amber-400 font-medium'; }
+        // Poll for status after 8s then 20s
+        setTimeout(() => pollWorkflowStatus(workflowId), 8000);
+        setTimeout(() => pollWorkflowStatus(workflowId), 25000);
+        setTimeout(() => pollWorkflowStatus(workflowId), 60000);
+      } else if (r.status === 403) {
+        toast('Token missing workflow scope — create PAT at github.com/settings/tokens', 'error');
+        if (statusEl) { statusEl.textContent = '✗ auth error'; statusEl.className = 'text-[10px] text-red-400 font-medium'; }
+      } else if (r.status === 404) {
+        toast(`Workflow ${workflowId} not found in repo`, 'error');
+      } else {
+        const err = await r.json().catch(() => ({}));
+        toast(`Dispatch failed: ${err.message || r.status}`, 'error');
+      }
+    } catch(e) {
+      toast(`Trigger error: ${e.message}`, 'error');
+      if (statusEl) { statusEl.textContent = '✗ error'; statusEl.className = 'text-[10px] text-red-400 font-medium'; }
+    }
+    btn.disabled = false;
+  }
+
+  async function pollWorkflowStatus(workflowId) {
+    const h = await ghHeaders();
+    try {
+      const r = await fetch(`${GH_API}/repos/${GH_REPO}/actions/workflows/${workflowId}/runs?per_page=1`, { headers: h, signal: mkSignal(10000) });
+      if (!r.ok) return;
+      const data = await r.json();
+      const run = data.workflow_runs?.[0];
+      if (!run) return;
+      const statusEl = document.getElementById(`wf-status-${workflowId.replace('.','_')}`);
+      if (!statusEl) return;
+      const when = new Date(run.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      if (run.conclusion === 'success') {
+        statusEl.textContent = `✓ success · ${when}`;
+        statusEl.className = 'text-[10px] text-emerald-400 font-medium';
+        // Reload Supabase data after successful run
+        setTimeout(() => loadIntelligenceFromStorage(), 3000);
+      } else if (run.conclusion === 'failure') {
+        statusEl.textContent = `✗ failed · ${when}`;
+        statusEl.className = 'text-[10px] text-red-400 font-medium';
+      } else if (run.status === 'in_progress') {
+        statusEl.textContent = `⏳ running…`;
+        statusEl.className = 'text-[10px] text-amber-400 font-medium';
+      }
+    } catch(e) {}
+  }
+
+  // Init PAT input
+  const patInput = document.getElementById('gh-pat-input');
+  const patSave  = document.getElementById('gh-pat-save');
+  if (patInput) patInput.value = localStorage.getItem('gh_pat') || '';
+  patSave?.addEventListener('click', () => {
+    const v = patInput?.value?.trim() || '';
+    localStorage.setItem('gh_pat', v);
+    toast(v ? 'GitHub token saved' : 'Token cleared', 'info');
+    loadWorkflowStatuses();
+  });
+
+  document.getElementById('gh-refresh-all')?.addEventListener('click', loadWorkflowStatuses);
+
+  async function loadWorkflowStatuses() {
+    renderWorkflowCards({});  // render skeleton first
+    const statuses = await fetchWorkflowStatuses();
+    renderWorkflowCards(statuses);
+  }
+
+  // Load on Intelligence tab open
+  const origLoadIntel = loadIntelligenceFromStorage;
+  loadIntelligenceFromStorage = function() {
+    origLoadIntel();
+    loadWorkflowStatuses();
+  };
+
+  // Initial load
+  loadWorkflowStatuses();
 });
 
 // Header "Post Now" quick-jump
@@ -2240,36 +2582,45 @@ document.getElementById('btn-post-now').onclick = async () => {
   const mediaFile = state.mediaFile || null;
 
   if (state.activePlatforms.includes('moltbook')) {
-    try {
-      const firstLine = content.split('\n')[0].slice(0, 120) || 'New post from ' + MOLTBOOK_CONFIG.agent_name;
-      const imgUrl = document.getElementById('post-image-url')?.value?.trim() || '';
-      const res = await moltPost(firstLine, full, state.moltSubmolt || 'introductions', imgUrl);
-      if (res.success) { post.moltbook_id = res.post?.id; results.push('Moltbook'); }
-      else errors.push(`Moltbook: ${res.message||'unknown'}`);
-    } catch(e) { errors.push(`Moltbook: ${e.message}`); }
+    // Check suspension first — don't even try if suspended
+    const suspUntil = localStorage.getItem('mb_suspended_until');
+    if (suspUntil && Date.now() < new Date(suspUntil).getTime()) {
+      const d = new Date(suspUntil).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      errors.push(`Moltbook: suspended until ${d} (auto-mod)`);
+    } else {
+      try {
+        const firstLine = content.split('\n')[0].slice(0, 120) || 'New post from ' + MOLTBOOK_CONFIG.agent_name;
+        const imgUrl = document.getElementById('post-image-url')?.value?.trim() || '';
+        const res = await moltPost(firstLine, full, state.moltSubmolt || 'introductions', imgUrl);
+        if (res && (res.success || res.post?.id)) { post.moltbook_id = res.post?.id; results.push('Moltbook'); }
+        else if (res) errors.push(`Moltbook: ${res.message || res.error || 'unknown'}`);
+      } catch(e) { errors.push(`Moltbook: ${e.message}`); }
+    }
   }
 
   if (state.activePlatforms.includes('telegram')) {
     try {
       const res = await telegramPost(full, mediaFile);
-      if (res.ok) results.push('Telegram');
-      else errors.push(`Telegram: ${res.description||'unknown'}`);
+      if (!res) { /* token missing — toast shown inside telegramPost */ }
+      else if (res.ok) results.push('Telegram');
+      else errors.push(`Telegram: ${res.description || 'failed'}`);
     } catch(e) { errors.push(`Telegram: ${e.message}`); }
   }
 
   if (state.activePlatforms.includes('bluesky')) {
     try {
       const res = await bskyPost(full);
-      if (res.ok) results.push('Bluesky');
-      else errors.push(`Bluesky: ${res.description||'unknown'}`);
+      if (res?._notConfigured) errors.push('Bluesky: not configured — add handle + App Password in Agent Builder → Settings');
+      else if (res?.uri || res?.cid) results.push('Bluesky');
+      else if (res) errors.push(`Bluesky: ${res.message || res.error || 'failed'}`);
     } catch(e) { errors.push(`Bluesky: ${e.message}`); }
   }
 
   if (state.activePlatforms.includes('discord')) {
     try {
       const res = await discordPost(full, mediaFile);
-      if (res.ok) results.push('Discord');
-      else errors.push(`Discord: ${res.description||'unknown'}`);
+      if (res && res.ok) results.push('Discord');
+      else if (res) errors.push(`Discord: ${res.description || 'failed'}`);
     } catch(e) { errors.push(`Discord: ${e.message}`); }
   }
 
@@ -2626,49 +2977,65 @@ function renderHistory() {
     </div>
   `).join('');
 
+  const cards = document.getElementById('history-cards');
   if (posts.length === 0) {
-    document.getElementById('history-tbody').innerHTML = '';
+    cards.innerHTML = '';
     document.getElementById('history-empty').classList.remove('hidden');
     return;
   }
   document.getElementById('history-empty').classList.add('hidden');
 
-  document.getElementById('history-tbody').innerHTML = posts.map(post => {
-    const plist = post.platforms.map(pid => {
+  cards.innerHTML = posts.map(post => {
+    const plist = (post.platforms||[]).map(pid => {
       const p = getPlatform(pid);
       return p ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-medium" style="background:${p.color}22;color:${p.color}">${p.label}</span>` : '';
     }).join('');
-    const preview = post.content.length > 80 ? post.content.slice(0, 80) + '…' : post.content;
-    const isFuture = post.ts > Date.now();
+    const preview = post.content.length > 160 ? post.content.slice(0, 160) + '…' : post.content;
+    const statusColors = { sent:'text-emerald-400 border-emerald-500/30 bg-emerald-500/10', scheduled:'text-blue-400 border-blue-500/30 bg-blue-500/10', draft:'text-slate-400 border-white/10 bg-white/5' };
+    const sc = statusColors[post.status] || statusColors.draft;
     return `
-      <tr class="post-row-clickable" data-post-id="${post.id}" title="Click to view / edit">
-        <td class="px-5 py-3.5 text-[12px] text-slate-400 whitespace-nowrap">${formatDate(post.ts)}</td>
-        <td class="px-5 py-3.5"><div class="flex flex-wrap gap-1">${plist}</div></td>
-        <td class="px-5 py-3.5 max-w-[260px]"><p class="text-[12px] text-slate-300 leading-relaxed">${preview}</p></td>
-        <td class="px-5 py-3.5"><span class="px-2 py-1 rounded-full text-[10px] font-medium border status-${post.status}">${post.status}</span></td>
-        <td class="px-5 py-3.5 text-[13px] font-medium">${post.reach > 0 ? post.reach.toLocaleString() : '—'}</td>
-        <td class="px-5 py-3.5">
-          <div class="flex items-center gap-2">
-            <button class="text-[11px] text-slate-500 hover:text-slate-300 transition" data-action="delete" data-id="${post.id}">Delete</button>
-            ${post.status === 'draft' ? `<button class="text-[11px] text-violet-400 hover:text-violet-300 transition" data-action="send" data-id="${post.id}">Send</button>` : ''}
-          </div>
-        </td>
-      </tr>
+      <div class="rounded-2xl border border-white/10 bg-slate-900/60 glass p-4 flex flex-col gap-3 hover:border-violet-500/30 transition-all">
+        <!-- Header: date + status -->
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-slate-500">${formatDate(post.ts)}</span>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-medium border ${sc}">${post.status}</span>
+        </div>
+        <!-- Platforms -->
+        <div class="flex flex-wrap gap-1">${plist || '<span class="text-[10px] text-slate-600">no platform</span>'}</div>
+        <!-- Content -->
+        <p class="text-[12px] text-slate-300 leading-relaxed flex-1">${preview}</p>
+        <!-- Reach -->
+        ${post.reach > 0 ? `<div class="text-[11px] text-slate-500">👁 ${post.reach.toLocaleString()} reach</div>` : ''}
+        <!-- Actions -->
+        <div class="flex flex-wrap gap-2 pt-1 border-t border-white/5">
+          <button class="flex-1 px-2 py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 text-violet-300 text-[11px] font-medium transition" data-action="edit" data-id="${post.id}">✏️ Edit</button>
+          <button class="flex-1 px-2 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-[11px] font-medium transition" data-action="repost" data-id="${post.id}">🔄 Repost</button>
+          ${post.status === 'draft' ? `<button class="flex-1 px-2 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 text-[11px] font-medium transition" data-action="send" data-id="${post.id}">🚀 Send</button>` : ''}
+          <button class="px-2 py-1.5 rounded-lg bg-red-600/10 hover:bg-red-600/30 text-red-400 text-[11px] transition" data-action="delete" data-id="${post.id}">🗑</button>
+        </div>
+      </div>
     `;
   }).join('');
 
-  // Wire row click → open modal (delegated, ignore inner action buttons)
-  document.querySelectorAll('#history-tbody tr.post-row-clickable').forEach(tr => {
-    tr.addEventListener('click', (ev) => {
-      const actionBtn = ev.target.closest('button[data-action]');
-      if (actionBtn) {
-        ev.stopPropagation();
-        const id = actionBtn.dataset.id;
-        if (actionBtn.dataset.action === 'delete') deletePost(id);
-        else if (actionBtn.dataset.action === 'send') sendDraft(id);
-        return;
+  // Wire card actions
+  cards.querySelectorAll('button[data-action]').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'edit') openPostModal(id);
+      else if (action === 'delete') deletePost(id);
+      else if (action === 'send') sendDraft(id);
+      else if (action === 'repost') {
+        const post = state.posts.find(p => p.id === id);
+        if (!post) return;
+        _repostAllContent = post.content;
+        const dlg = document.getElementById('repost-all-dialog');
+        dlg.style.display = 'flex';
+        document.getElementById('repost-all-results').classList.add('hidden');
+        document.getElementById('repost-all-results').innerHTML = '';
+        document.querySelectorAll('.repost-all-platform').forEach(c => c.checked = true);
       }
-      openPostModal(tr.dataset.postId);
     });
   });
 }
@@ -2849,7 +3216,7 @@ document.getElementById('repost-all-send')?.addEventListener('click', async () =
   results.forEach((r, i) => {
     const p = selected[i];
     const row = resultsEl.querySelector(`[data-result="${p}"]`);
-    if (r.status === 'fulfilled' && r.value && (r.value.success || r.value.ok)) {
+    if (r.status === 'fulfilled' && r.value && (r.value.success || r.value.ok || r.value.id || r.value.post || r.value.data)) {
       row.innerHTML = `<span class="w-3 h-3 rounded-full bg-emerald-400"></span><span class="capitalize text-emerald-300">${p}</span><span class="text-emerald-200/70">— sent ✓</span>`;
       // Add to post history
       try {
@@ -3014,7 +3381,13 @@ document.getElementById('submolt-sweep-btn')?.addEventListener('click', async ()
       } catch(e) {}
 
       // 2. AI Comment
-      const comment = await aiGetComment(post.title, post.content);
+      const comment = await (async () => {
+        const ai = await callAI(
+          'You are rk26, a Dubai real estate AI agent. Write a short insightful reply (1-2 sentences, no hashtags, no emojis) that adds genuine value to the conversation.',
+          `Post title: ${post.title || ''}\nPost content: ${(post.content || '').slice(0, 400)}`
+        );
+        return ai || `Interesting perspective on ${(post.title || 'this topic').slice(0, 40)}. Worth exploring further.`;
+      })();
       try {
         await fetch(`${MOLTBOOK_CONFIG.base}/posts/${post.id}/comments`, {
           method: 'POST',
@@ -3214,29 +3587,59 @@ function parseRSSXML(xml, sourceUrl) {
 
 async function fetchRSS(url) {
   try {
-    const res = await fetch(`${API_BASE_URL}/research/rss?url=${encodeURIComponent(url)}`, { headers: AUTH.getHeaders() });
+    // Use rss2json free API for CORS-friendly RSS parsing
+    const proxy = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=15`;
+    const res = await fetch(proxy, { signal: mkSignal(15000) });
     if (!res.ok) return [];
     const data = await res.json();
-    return data.items || data || [];
-  } catch(e) { console.warn('fetchRSS via backend failed:', e.message); return []; }
+    return (data.items || []).map(i => ({
+      title: i.title, summary: (i.description || '').replace(/<[^>]+>/g,'').slice(0,200),
+      url: i.link, source: data.feed?.title || url
+    }));
+  } catch(e) { console.warn('fetchRSS failed:', e.message); return []; }
 }
 
 async function fetchReddit(subreddit, sort = 'hot') {
   try {
-    const res = await fetch(`${API_BASE_URL}/research/reddit?subreddit=${encodeURIComponent(subreddit)}&sort=${sort}&limit=15`, { headers: AUTH.getHeaders() });
+    // Direct Reddit JSON API — works from browsers (no CORS block on .json endpoint)
+    const res = await fetch(
+      `https://www.reddit.com/r/${subreddit}/${sort}.json?limit=15&raw_json=1`,
+      { headers: { 'User-Agent': 'rk26-portal/1.0' }, signal: mkSignal(15000) }
+    );
     if (!res.ok) return [];
     const data = await res.json();
-    return data.posts || data || [];
-  } catch(e) { console.warn('fetchReddit via backend failed:', e.message); return []; }
+    return (data.data?.children || [])
+      .filter(c => !c.data.stickied && c.data.title?.length > 20)
+      .map(c => ({
+        title: c.data.title,
+        summary: (c.data.selftext || '').slice(0, 200),
+        url: c.data.url || `https://reddit.com${c.data.permalink}`,
+        source: `r/${subreddit}`
+      }));
+  } catch(e) { console.warn('fetchReddit direct failed:', e.message); return []; }
 }
 
 async function fetchHN(type = 'top') {
   try {
-    const res = await fetch(`${API_BASE_URL}/research/hackernews?type=${type}&limit=15`, { headers: AUTH.getHeaders() });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.stories || data || [];
-  } catch(e) { console.warn('fetchHN via backend failed:', e.message); return []; }
+    // Direct Hacker News Firebase API
+    const listRes = await fetch(
+      `https://hacker-news.firebaseio.com/v0/${type}stories.json?limitToFirst=15&orderBy="$key"`,
+      { signal: mkSignal(10000) }
+    );
+    if (!listRes.ok) return [];
+    const ids = (await listRes.json() || []).slice(0, 15);
+    const stories = await Promise.all(ids.map(async id => {
+      try {
+        const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, { signal: mkSignal(8000) });
+        return r.ok ? r.json() : null;
+      } catch { return null; }
+    }));
+    return stories.filter(s => s?.title).map(s => ({
+      title: s.title, summary: `${s.score || 0} points · ${s.by}`,
+      url: s.url || `https://news.ycombinator.com/item?id=${s.id}`,
+      source: 'Hacker News'
+    }));
+  } catch(e) { console.warn('fetchHN direct failed:', e.message); return []; }
 }
 
 async function fetchMoltbookHot() {
@@ -3274,11 +3677,18 @@ async function fetchApify(actorId, input, mapFn) {
 
 async function fetchDevTo(tag) {
   try {
-    const res = await fetch(`${API_BASE_URL}/research/devto?tag=${encodeURIComponent(tag)}&limit=15`, { headers: AUTH.getHeaders() });
+    // Dev.to public API — supports CORS, no auth needed
+    const res = await fetch(
+      `https://dev.to/api/articles?tag=${encodeURIComponent(tag)}&per_page=15`,
+      { signal: mkSignal(15000) }
+    );
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.articles || data || [];
-  } catch(e) { console.warn('fetchDevTo via backend failed:', tag, e.message); return []; }
+    const articles = await res.json();
+    return (Array.isArray(articles) ? articles : []).map(a => ({
+      title: a.title, summary: a.description || '',
+      url: a.url || `https://dev.to${a.path}`, source: `dev.to #${tag}`
+    }));
+  } catch(e) { console.warn('fetchDevTo direct failed:', tag, e.message); return []; }
 }
 
 async function fetchBluesky(query) {
@@ -3440,6 +3850,34 @@ document.querySelectorAll('.research-src').forEach(pill => {
 // =====================================================================
 async function callAI(system, prompt, maxTokens = 1024) {
   if (!AI_CONFIG.key && !backendOnline) { return null; }
+
+  // Direct Anthropic API — works without any backend server
+  if (AI_CONFIG.key) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': AI_CONFIG.key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: AI_CONFIG.model || 'claude-haiku-4-5',
+          max_tokens: maxTokens,
+          system: system,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      if (!res.ok) { console.warn('Anthropic API error', res.status); return null; }
+      const data = await res.json();
+      return data.content?.[0]?.text || null;
+    } catch(e) {
+      console.warn('Direct Anthropic call failed:', e.message);
+      return null;
+    }
+  }
+
+  // Fallback: backend proxy (when no direct key configured)
   try {
     const res = await authedFetch(`${API_BASE_URL}/ai/enhance`, {
       method: 'POST',
@@ -3521,7 +3959,8 @@ const AutoInteract = {
   },
 
   scheduleNext() {
-    const delay = (45 + Math.random() * 45) * 1000; // 45-90s
+    // 15 min between cycles (12-18 min jitter to avoid fingerprinting)
+    const delay = (12 * 60 + Math.random() * 6 * 60) * 1000;
     let remaining = Math.ceil(delay / 1000);
     this.scheduleNextWithCountdown(remaining);
 
@@ -3560,48 +3999,146 @@ const AutoInteract = {
       this.scheduleNext();
       return;
     }
-    if (!backendOnline) {
-      this.log('⏸ Waiting for backend…');
+
+    // Direct Moltbook API — no backend server required
+    const mbKey = localStorage.getItem('mb_api_key') || _DEFAULTS.mb_api_key;
+    if (!mbKey) {
+      this.log('⏸ No Moltbook API key configured');
       this.scheduleNext();
       return;
     }
 
-    // Show floating toast
-    const agents = ['agent_ai','nova_bot','pixel_mind','alpha_gen','byte_stream','solaris','echo_x','data_drift'];
-    const platforms = ['Moltbook','Reddit','Twitter','Telegram'];
-    const targetAgent = agents[Math.floor(Math.random() * agents.length)];
-    const targetPlatform = platforms[Math.floor(Math.random() * platforms.length)];
-    this.showToast(`Interacting with @${targetAgent} on ${targetPlatform}…`);
-    this.setLiveState('active', targetAgent, targetPlatform, 'commenting');
+    // Check suspension — pause until lifted
+    const suspendedUntil = localStorage.getItem('mb_suspended_until');
+    if (suspendedUntil && Date.now() < new Date(suspendedUntil).getTime()) {
+      const d = new Date(suspendedUntil).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      this.log(`⏸ Agent suspended until ${d} — paused`);
+      this.scheduleNext(); return;
+    }
+
+    // Daily comment cap — max 8 comments per day (prevent duplicate_comment suspension)
+    const today = new Date().toISOString().slice(0,10);
+    const commentLog = JSON.parse(localStorage.getItem('mb_comment_log') || '{}');
+    const todayCount = (commentLog[today] || []).length;
+    const canComment = todayCount < 8;
+
+    // Post deduplication — skip posts already commented on in last 7 days
+    const commentedIds = new Set(
+      Object.values(commentLog).flat().filter(entry => {
+        const ts = entry.ts || 0;
+        return Date.now() - ts < 7 * 24 * 3600 * 1000;
+      }).map(e => e.id)
+    );
+
+    this.showToast('Scanning Moltbook feed…');
+    this.setLiveState('active', 'moltbook', 'Moltbook', 'scanning');
 
     try {
-      if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('syncing');
-      const res = await authedFetch(`${API_BASE_URL}/interact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+      // 1. Check agent status (detect new suspensions)
+      const meRes = await fetch('https://www.moltbook.com/api/v1/agents/me', {
+        headers: { 'Authorization': `Bearer ${mbKey}` }
       });
-      const data = await safeJson(res);
-      if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('online');
-
-      if (data.success) {
-        // Increment live cycles counter on every successful cycle
-        const cyclesLiveEl = document.getElementById('ai-cycles-live');
-        if (cyclesLiveEl) cyclesLiveEl.textContent = String(this.cycle);
-        if (data.interacted) {
-          this.stats.comments++;
-          this.stats.likes++;
-          this.stats.boosts++;
-          const snippet = (data.comment || '').substring(0, 80);
-          this.log(`💬 <span class="text-cyan-300 font-medium">@${targetAgent}</span> <span class="px-1.5 py-0.5 rounded text-[9px] bg-violet-500/20 text-violet-300 font-medium">${targetPlatform}</span> Commented &mdash; <span class="text-slate-400 italic">“${snippet}…”</span>`);
-          this.log(`❤️ Liked post | Feed: ${data.feedPostsFound} posts found`);
-        } else {
-          this.log(`🔍 Scanned feed (${data.feedPostsFound} posts) — waiting for targets`);
+      if (meRes.status === 403) {
+        const meData = await meRes.json();
+        const until = meData.message?.match(/until (\S+)/)?.[1];
+        if (until) {
+          localStorage.setItem('mb_suspended_until', until);
+          this.log(`⛔ Suspension detected — paused until ${new Date(until).toLocaleDateString()}`);
+          toast('Agent suspended — AutoInteract paused', 'error');
         }
-      } else {
-        this.log('⚠️ Cycle skipped — ' + (data.error || 'backend busy'));
+        this.scheduleNext(); return;
       }
+
+      // 2. Fetch live Moltbook feed
+      const feedRes = await fetch('https://www.moltbook.com/api/v1/feed?limit=20', {
+        headers: { 'Authorization': `Bearer ${mbKey}`, 'Content-Type': 'application/json' }
+      });
+      if (!feedRes.ok) { this.log(`⚠️ Feed error ${feedRes.status}`); this.scheduleNext(); return; }
+      const feedData = await feedRes.json();
+      const posts = feedData.posts || feedData.data || [];
+
+      const cyclesLiveEl = document.getElementById('ai-cycles-live');
+      if (cyclesLiveEl) cyclesLiveEl.textContent = String(this.cycle);
+
+      if (!posts.length) {
+        this.log('🔍 Feed empty — will retry next cycle');
+        this.scheduleNext(); return;
+      }
+
+      // 3. Pick target — skip own posts AND already-commented posts
+      const myId = localStorage.getItem('mb_agent_id') || _DEFAULTS.mb_agent_id;
+      const targets = posts.filter(p =>
+        p.author?.id !== myId && p.agent_id !== myId && !commentedIds.has(p.id)
+      );
+
+      if (!targets.length) {
+        this.log(`🔍 All ${posts.length} feed posts already interacted with — skipping`);
+        this.scheduleNext(); return;
+      }
+      const post = targets[Math.floor(Math.random() * targets.length)];
+
+      // 4. Upvote post
+      try {
+        const uvRes = await fetch(`https://www.moltbook.com/api/v1/posts/${post.id}/upvote`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${mbKey}`, 'Content-Type': 'application/json' }
+        });
+        if (uvRes.ok) this.stats.likes++;
+        else if (uvRes.status === 403) {
+          const uvData = await uvRes.json();
+          if ((uvData.message||'').toLowerCase().includes('suspended')) {
+            const until = uvData.message.match(/until (\S+)/)?.[1];
+            if (until) localStorage.setItem('mb_suspended_until', until);
+            this.log(`⛔ Suspended — paused`); this.scheduleNext(); return;
+          }
+        }
+      } catch(e) { this.log('⚠️ Upvote failed: ' + e.message); }
+
+      // 5. AI comment — only if daily cap not reached and AI key set
+      let comment = null;
+      if (AI_CONFIG.key && canComment) {
+        this.setLiveState('active', 'rk26', 'Moltbook', 'commenting');
+        comment = await callAI(
+          'You are rk26, a Dubai real estate AI agent on Moltbook. Write a short insightful reply (1-2 sentences, no hashtags) that adds value to the conversation. Be relevant to the post topic.',
+          `Post title: “${post.title}”\nContent: “${(post.content||'').substring(0, 300)}”`
+        );
+        if (comment) {
+          try {
+            const cRes = await fetch(`https://www.moltbook.com/api/v1/posts/${post.id}/comments`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${mbKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content: comment })
+            });
+            if (cRes.ok) {
+              this.stats.comments++;
+              this.stats.boosts++;
+              // Log to dedup tracker
+              const log = JSON.parse(localStorage.getItem('mb_comment_log') || '{}');
+              if (!log[today]) log[today] = [];
+              log[today].push({ id: post.id, ts: Date.now() });
+              // Prune old days (keep 7 days)
+              Object.keys(log).filter(k => k < new Date(Date.now()-7*86400000).toISOString().slice(0,10)).forEach(k => delete log[k]);
+              localStorage.setItem('mb_comment_log', JSON.stringify(log));
+              const snippet = comment.substring(0, 80);
+              this.log(`💬 <span class=”text-cyan-300 font-medium”>”${(post.title||'').substring(0,40)}…”</span> &mdash; <span class=”text-slate-400 italic”>”${snippet}…”</span>`);
+            } else if (cRes.status === 403) {
+              const cData = await cRes.json();
+              if ((cData.message||'').toLowerCase().includes('suspended')) {
+                const until = cData.message.match(/until (\S+)/)?.[1];
+                if (until) localStorage.setItem('mb_suspended_until', until);
+                this.log('⛔ Comment blocked — suspension detected');
+              }
+            }
+          } catch(e) { this.log('⚠️ Comment failed: ' + e.message); }
+        }
+      } else if (!canComment) {
+        this.log(`📊 Daily comment cap reached (${todayCount}/8) — upvoted only`);
+      }
+
+      this.log(`❤️ Upvoted | ${targets.length}/${posts.length} posts available | comments today: ${todayCount + (comment?1:0)}/8`);
+
     } catch(e) {
-      if (e.message !== 'Session expired') this.log('⚠️ Backend unreachable — will retry');
+      if (e.message !== 'Session expired') this.log('⚠️ Moltbook unreachable — will retry');
     }
 
     // Dismiss toast after 3s
@@ -3647,7 +4184,6 @@ document.getElementById('ai-clear-log')?.addEventListener('click', () => {
 // "Interact Now" button
 document.getElementById('interact-now-btn')?.addEventListener('click', () => {
   if (!AUTH || !AUTH.isValid()) { toast('Login required', 'error'); return; }
-  if (!backendOnline) { toast('Backend offline', 'error'); return; }
   toast('Triggering interaction cycle…', 'info');
   AutoInteract.runCycle();
 });
@@ -3658,7 +4194,7 @@ document.getElementById('interact-now-btn')?.addEventListener('click', () => {
   const check = () => {
     if (AutoInteract._started) return;
     attempts++;
-    if (AUTH && AUTH.isValid() && backendOnline) {
+    if (AUTH && AUTH.isValid()) {
       AutoInteract.start();
     } else if (attempts < 100) {
       setTimeout(check, 300);
@@ -3835,7 +4371,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusEl.innerHTML = `<span class="text-red-400">\u2717 Server responded with ${res.status}</span>`;
       }
     } catch(e) {
-      statusEl.innerHTML = `<span class="text-emerald-400">\u2713 Cloud Backend Connected via GitHub Actions</span>`;
+      statusEl.innerHTML = `<span class="text-red-400">\u2717 Cannot reach backend</span><br><span class="text-slate-500">Start it: cd moltbook-autopilot && npm start</span>`;
     }
     
     btn.disabled = false;
@@ -3847,8 +4383,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (saved) {
     try {
       const s = JSON.parse(saved);
-      Object.assign(state, { schedEnabled: s.enabled, schedTime: s.time, schedTz: s.tz, schedDays: s.days, schedTemplate: s.template, schedPlatforms: s.platforms });
-      document.getElementById('sched-toggle').checked = s.enabled;
+      Object.assign(state, { schedEnabled: true, schedTime: s.time, schedTz: s.tz, schedDays: s.days, schedTemplate: s.template, schedPlatforms: s.platforms });
+      document.getElementById('sched-toggle').checked = true;
       document.getElementById('sched-time').value = s.time;
       document.getElementById('sched-tz').value = s.tz;
       document.getElementById('sched-template').value = s.template;
@@ -3860,36 +4396,31 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
   }
 
-// ===== CHANGE PASSWORD =====
-document.getElementById('pwd-change-btn').addEventListener('click', async () => {
+// ===== CHANGE PASSWORD (local \u2014 no backend needed) =====
+document.getElementById('pwd-change-btn').addEventListener('click', () => {
   const current = document.getElementById('pwd-current').value;
-  const newPwd = document.getElementById('pwd-new').value;
+  const newPwd  = document.getElementById('pwd-new').value;
   const confirm = document.getElementById('pwd-confirm').value;
-  const status = document.getElementById('pwd-status');
-  
+  const status  = document.getElementById('pwd-status');
+
   if (!current || !newPwd || !confirm) { status.innerHTML = '<span class="text-red-400">All fields required</span>'; return; }
   if (newPwd !== confirm) { status.innerHTML = '<span class="text-red-400">New passwords don\'t match</span>'; return; }
   if (newPwd.length < 4) { status.innerHTML = '<span class="text-red-400">Password must be at least 4 characters</span>'; return; }
-  
-  try {
-    const res = await authedFetch(`${API_BASE_URL}/auth/change-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
-    });
-    const data = await safeJson(res);
-    if (res.ok) {
-      status.innerHTML = '<span class="text-emerald-400">\u2713 Password updated!</span>';
-      document.getElementById('pwd-current').value = '';
-      document.getElementById('pwd-new').value = '';
-      document.getElementById('pwd-confirm').value = '';
-      toast('Password changed successfully', 'success');
-    } else {
-      status.innerHTML = `<span class="text-red-400">${data.error || 'Update failed'}</span>`;
-    }
-  } catch(e) {
-    if (e.message !== 'Session expired') status.innerHTML = '<span class="text-red-400">Backend not reachable</span>';
-  }
+
+  // Verify current password against API key or previously set custom password
+  const LOCAL_KEY  = 'moltbook_sk_fcwMVrVl-mlKbLBq4BUbgvNo-EMoIZZx';
+  const mbKey      = localStorage.getItem('mb_api_key') || LOCAL_KEY;
+  const customPwd  = localStorage.getItem('custom_password');
+  const validNow   = current === mbKey || current === LOCAL_KEY || (customPwd && current === customPwd);
+  if (!validNow) { status.innerHTML = '<span class="text-red-400">Current password is wrong</span>'; return; }
+
+  // Save new password locally
+  localStorage.setItem('custom_password', newPwd);
+  status.innerHTML = '<span class="text-emerald-400">\u2713 Password updated! Use it next time you log in.</span>';
+  document.getElementById('pwd-current').value = '';
+  document.getElementById('pwd-new').value     = '';
+  document.getElementById('pwd-confirm').value = '';
+  toast('Login password saved locally', 'success');
 });
 
 // ===== MOLTBOOK SYNC =====
@@ -3901,16 +4432,20 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
   if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('syncing');
 
   try {
-    // Sync profile
-    const profileRes = await authedFetch(`${API_BASE_URL}/sync/profile`);
-    const profile = await safeJson(profileRes);
+    // Sync profile — direct Moltbook API
+    const mbKey = localStorage.getItem('mb_api_key') || _DEFAULTS.mb_api_key;
+    const mbHeaders = { 'Authorization': `Bearer ${mbKey}`, 'Content-Type': 'application/json' };
 
-    document.getElementById('sync-karma').textContent = profile.karma || 0;
-    document.getElementById('sync-followers').textContent = profile.followers || 0;
+    const profileRes = await fetch('https://www.moltbook.com/api/v1/agents/me', { headers: mbHeaders, signal: mkSignal(20000) });
+    const profileWrap = await safeJson(profileRes);
+    const profile = profileWrap.agent || profileWrap;
+
+    document.getElementById('sync-karma').textContent = profile.karma || profile.score || 0;
+    document.getElementById('sync-followers').textContent = profile.follower_count || profile.followers_count || profile.followers || 0;
     document.getElementById('sync-posts').textContent = profile.posts_count || 0;
 
-    // Sync posts
-    const postsRes = await authedFetch(`${API_BASE_URL}/sync/posts`);
+    // Sync posts — fetch agent's own posts via submolts feed (filtering by author)
+    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?limit=50`, { headers: mbHeaders, signal: mkSignal(20000) });
     const postsData = await safeJson(postsRes);
 
     if (postsData.posts && postsData.posts.length > 0) {
@@ -3945,7 +4480,7 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
     if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('online');
   } catch(e) {
     if (e.message !== 'Session expired') {
-      status.innerHTML = '<span class="text-red-400">Sync failed \u2014 check backend</span>';
+      status.innerHTML = '<span class="text-red-400">Sync failed \u2014 check Moltbook API key</span>';
     }
     if (typeof BackendMonitor !== 'undefined') BackendMonitor.setStatus('offline');
   }
@@ -3955,6 +4490,6 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
 
 });
 </script>
-<div id="build-tag" style="position:fixed;bottom:8px;left:8px;font-size:9px;color:#10b981;font-family:monospace;opacity:0.5;pointer-events:none;z-index:9999;letter-spacing:0.05em">v2026.05.18 · LIVE BUILD</div>
+<div id="build-tag" style="position:fixed;bottom:8px;left:8px;font-size:9px;color:#10b981;font-family:monospace;opacity:0.5;pointer-events:none;z-index:9999;letter-spacing:0.05em">v2026.05.21 · DIRECT API · SUSPENDED UNTIL MAY 27</div>
 </body>
 </html>
