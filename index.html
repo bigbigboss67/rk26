@@ -3265,7 +3265,7 @@ document.getElementById('sync-moltbook-btn')?.addEventListener('click', async ()
   btn.textContent = '⏳ Syncing...'; btn.disabled = true;
   try {
     const agentName = MOLTBOOK_CONFIG.agent_name || 'rk26';
-    const res = await fetch(`${MOLTBOOK_CONFIG.base}/posts?author=${agentName}&sort=new&limit=50`, {
+    const res = await fetch(`${MOLTBOOK_CONFIG.base}/posts?agent_id=${MOLTBOOK_CONFIG.agent_id}&limit=100`, {
       headers: { 'Authorization': `Bearer ${MOLTBOOK_CONFIG.api_key}` },
       signal: mkSignal(15000)
     });
@@ -4483,6 +4483,6 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
 
 });
 </script>
-<div id="build-tag" style="position:fixed;bottom:8px;left:8px;font-size:9px;color:#10b981;font-family:monospace;opacity:0.5;pointer-events:none;z-index:9999;letter-spacing:0.05em">v2026.05.21 · DIRECT API · SUSPENDED UNTIL MAY 27</div>
+<div id="build-tag" style="position:fixed;bottom:8px;left:8px;font-size:9px;color:#10b981;font-family:monospace;opacity:0.5;pointer-events:none;z-index:9999;letter-spacing:0.05em">v2026.05.28 · DIRECT API · LIVE</div>
 </body>
 </html>
