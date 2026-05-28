@@ -189,10 +189,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
           Post History
         </button>
-        <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="research">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          Research
-        </button>
+        
         <button class="section-tab flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium text-slate-400 border border-transparent whitespace-nowrap" data-section="autointeract">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Auto-Interact
@@ -1881,11 +1878,6 @@ document.querySelectorAll('.section-tab').forEach(btn => {
     document.getElementById('section-' + btn.dataset.section).classList.add('visible');
     if (btn.dataset.section === 'history') renderHistory();
     if (btn.dataset.section === 'poster') { renderPlatformList(); renderPlatformPreviews(); }
-    if (btn.dataset.section === 'research') {
-      // Auto-fetch if no results yet
-      const container = document.getElementById('research-results');
-      if (!container || container.children.length === 0) runResearch();
-    }
     if (btn.dataset.section === 'intelligence') loadIntelligenceFromStorage();
   });
 
@@ -2028,7 +2020,7 @@ document.querySelectorAll('.section-tab').forEach(btn => {
   const WORKFLOWS = [
     { id: 'auto-post.yml',   label: 'Auto Post',   icon: '📮', schedule: '3× daily' },
     { id: 'super-agent.yml', label: 'Super Agent', icon: '🤖', schedule: '3× daily' },
-    { id: 'crawler.yml',     label: 'Web Crawler', icon: '🕷️', schedule: '2× daily' },
+    
     { id: 'predictor.yml',   label: 'Predictor',   icon: '🔮', schedule: 'daily' },
   ];
 
@@ -3543,7 +3535,6 @@ document.querySelectorAll('.hist-filter').forEach(btn => {
 });
 
 // =====================================================================
-// RESEARCH AGENT
 // =====================================================================
 const RESEARCH_SOURCES = {
   hn:         { label: 'HackerNews',        color: '#f97316', fetch: fetchHN },
