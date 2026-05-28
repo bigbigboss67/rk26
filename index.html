@@ -2592,7 +2592,7 @@ document.getElementById('btn-post-now').onclick = async () => {
       try {
         const firstLine = content.split('\n')[0].slice(0, 120) || 'New post from ' + MOLTBOOK_CONFIG.agent_name;
         const imgUrl = document.getElementById('post-image-url')?.value?.trim() || '';
-        const res = await moltPost(firstLine, full, state.moltSubmolt || 'introductions', imgUrl);
+        const res = await moltPost(firstLine, full, state.moltSubmolt || 'general', imgUrl);
         if (res && (res.success || res.post?.id)) { post.moltbook_id = res.post?.id; results.push('Moltbook'); }
         else if (res) errors.push(`Moltbook: ${res.message || res.error || 'unknown'}`);
       } catch(e) { errors.push(`Moltbook: ${e.message}`); }
@@ -4446,11 +4446,12 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
     document.getElementById('sync-posts').textContent = profile.posts_count || 0;
 
     // Sync posts — fetch agent's own posts via submolts feed (filtering by author)
-    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?limit=50`, { headers: mbHeaders, signal: mkSignal(20000) });
+    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?limit=50&author_id=`, { headers: mbHeaders, signal: mkSignal(20000) });
     const postsData = await safeJson(postsRes);
 
     if (postsData.posts && postsData.posts.length > 0) {
-      const syncedIds = new Set(state.posts.filter(p => p.source === 'moltbook-sync').map(p => p.id));
+      state.posts = state.posts.filter(p => p.source !== 'moltbook-sync');
+        const syncedIds = new Set();
 
       postsData.posts.forEach(p => {
         if (!syncedIds.has(p.id)) {
