@@ -4437,14 +4437,14 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
     document.getElementById('sync-posts').textContent = profile.posts_count || 0;
 
     // Sync posts — fetch agent's own posts via submolts feed (filtering by author)
-    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?limit=50&author_id=`, { headers: mbHeaders, signal: mkSignal(20000) });
+    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?limit=50&author_id=${profile.id}`, { headers: mbHeaders, signal: mkSignal(20000) });
     const postsData = await safeJson(postsRes);
 
-    if (postsData.posts && postsData.posts.length > 0) {
+    const pList = postsData.posts || postsData.data || []; if (pList.length > 0) {
       state.posts = state.posts.filter(p => p.source !== 'moltbook-sync');
         const syncedIds = new Set();
 
-      postsData.posts.forEach(p => {
+      pList.forEach(p => {
         if (!syncedIds.has(p.id)) {
           state.posts.push({
             id: p.id || 'mb-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
