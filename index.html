@@ -4436,8 +4436,8 @@ document.getElementById('sync-profile-btn').addEventListener('click', async () =
     document.getElementById('sync-followers').textContent = profile.follower_count || profile.followers_count || profile.followers || 0;
     document.getElementById('sync-posts').textContent = profile.posts_count || 0;
 
-    // Sync posts — fetch agent's own posts via submolts feed (filtering by author)
-    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?limit=50&author_id=${profile.id}`, { headers: mbHeaders, signal: mkSignal(20000) });
+    // Sync posts — fetch agent's own posts using agent_id filter
+    const postsRes = await fetch(`https://www.moltbook.com/api/v1/posts?agent_id=${profile.id}&limit=100`, { headers: mbHeaders, signal: mkSignal(20000) });
     const postsData = await safeJson(postsRes);
 
     const pList = postsData.posts || postsData.data || []; if (pList.length > 0) {
