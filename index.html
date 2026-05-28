@@ -1247,6 +1247,13 @@
   </div>
 
 <script>
+// ===== UTILITIES =====
+function mkSignal(ms) {
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+
 // ===== AUTHENTICATION =====
 const AUTH = {
   token: sessionStorage.getItem('auth_token') || null,
